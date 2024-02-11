@@ -1,0 +1,2 @@
+include qcsys/VERSION.txt
+include README.md
