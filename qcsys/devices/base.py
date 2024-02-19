@@ -4,7 +4,7 @@ from abc import abstractmethod, ABC
 from typing import Dict, Any
 
 from flax import struct
-from jax import tree_util
+from jax import tree_util, Array
 from jax.config import config
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -41,7 +41,7 @@ class Device(ABC):
         return self.full_ops()
 
     @abstractmethod
-    def common_ops(self) -> Dict[str, jnp.DeviceArray]:
+    def common_ops(self) -> Dict[str, Array]:
         """Set up common ops in the linear basis."""
 
     @abstractmethod

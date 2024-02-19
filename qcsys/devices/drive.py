@@ -4,7 +4,7 @@ from abc import abstractmethod, ABC
 from typing import Dict, Any
 
 from flax import struct
-from jax import tree_util, jit
+from jax import tree_util, jit, Array
 from jax.config import config
 import jax.numpy as jnp
 
@@ -31,7 +31,7 @@ class Drive(ABC):
     def ops(self):
         return self.common_ops()
 
-    def common_ops(self) -> Dict[str, jnp.DeviceArray]:
+    def common_ops(self) -> Dict[str, Array]:
         ops = {}
 
         M_max = self.M_max

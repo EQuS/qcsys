@@ -5,7 +5,7 @@ from typing import List, Optional, Dict, Any, Union
 import math
 
 from flax import struct
-from jax import jit, vmap
+from jax import jit, vmap, Array
 from jax.config import config
 import jaxquantum as jqt
 import jax.numpy as jnp
@@ -52,14 +52,14 @@ def promote(op, device_num, Ns):
 class System:
     Ns: List[int] = struct.field(pytree_node=False)
     devices: List[Union[Device, Drive]]
-    couplings: List[jnp.DeviceArray]
+    couplings: List[Array]
     params: Dict[str, Any]
 
     @classmethod
     def create(
         cls,
         devices: List[Union[Device, Drive]],
-        couplings: Optional[List[jnp.DeviceArray]] = None,
+        couplings: Optional[List[Array]] = None,
         params: Optional[Dict[str, Any]] = None,
     ):
         Ns = tuple([device.N for device in devices])
