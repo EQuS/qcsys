@@ -5,7 +5,7 @@ from typing import Dict, Any
 
 from flax import struct
 from jax import tree_util, Array
-from jax.config import config
+from jax import config
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 

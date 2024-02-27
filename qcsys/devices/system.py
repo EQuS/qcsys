@@ -6,7 +6,7 @@ import math
 
 from flax import struct
 from jax import jit, vmap, Array
-from jax.config import config
+from jax import config
 import jaxquantum as jqt
 import jax.numpy as jnp
 

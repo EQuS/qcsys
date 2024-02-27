@@ -1,6 +1,6 @@
 """ Kerr Nonlinear Oscillator """
 from flax import struct
-from jax.config import config
+from jax import config
 import jaxquantum as jqt
 import jax.numpy as jnp
 

@@ -5,7 +5,7 @@ from typing import Dict, Any
 
 from flax import struct
 from jax import tree_util, jit, Array
-from jax.config import config
+from jax import config
 import jax.numpy as jnp
 
 config.update("jax_enable_x64", True)
