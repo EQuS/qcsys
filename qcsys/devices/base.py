@@ -82,15 +82,12 @@ class Device(ABC):
         return eig_systems
 
     def get_op_in_H_eigenbasis(self, op):
-        # phi_indxs = np.arange(len(self.params["phi_exts"]))
         evecs = self.eig_systems["vecs"][:, : self.N]
-        op = jnp.dot(jnp.conjugate(evecs.transpose()), jnp.dot(op, evecs))
-        return op
+        return get_op_in_new_basis(op, evecs)
     
     def get_vec_in_H_eigenbasis(self, vec):
         evecs = self.eig_systems["vecs"][:, : self.N]
-        vec = jnp.dot(jnp.conjugate(evecs.transpose()), vec)
-        return vec
+        return get_vec_in_new_basis(vec, evecs)
 
     def full_ops(self):
         # TODO: use JAX vmap here
@@ -101,6 +98,15 @@ class Device(ABC):
             ops[name] = self.get_op_in_H_eigenbasis(op)
 
         return ops
+
+
+def get_op_in_new_basis(op, evecs):
+    op = jnp.dot(jnp.conjugate(evecs.transpose()), jnp.dot(op, evecs))
+    return op
+
+def get_vec_in_new_basis(vec, evecs):
+    vec = jnp.dot(jnp.conjugate(evecs.transpose()), vec)
+    return vec
 
 
 @struct.dataclass
