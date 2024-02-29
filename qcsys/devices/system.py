@@ -82,9 +82,12 @@ class System:
         for coupling in self.couplings:
             H += coupling
         return H
-
-    def calculate_eig_linear(self):
+    
+    def get_H(self):
         H_bare = self.get_H_bare()
         H_couplings = self.get_H_couplings()
-        H = H_bare + H_couplings
+        return H_bare + H_couplings
+
+    def calculate_eig_linear(self):
+        H = self.get_H()
         return calculate_eig(self.Ns, H)
