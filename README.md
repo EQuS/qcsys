@@ -1,83 +1,117 @@
 # qcsys
-<p align="center">
-  <img src="https://img.shields.io/static/v1?style=for-the-badge&label=code-status&message=Good&color=orange"/>
-  <img src="https://img.shields.io/static/v1?style=for-the-badge&label=initial-commit&message=Shantanu&color=inactive"/>
-    <img src="https://img.shields.io/static/v1?style=for-the-badge&label=maintainer&message=EQuS&color=inactive"/>
-</p>
 
-***Documentation**: [github.com/pages/EQuS/qcsys](https://github.com/pages/EQuS/qcsys/)*
-## Motivation
+[![License](https://img.shields.io/github/license/EQuS/qcsys.svg?style=popout-square)](https://opensource.org/license/apache-2-0) [![](https://img.shields.io/github/release/EQuS/qcsys.svg?style=popout-square)](https://github.com/EQuS/qcsys/releases) [![](https://img.shields.io/pypi/dm/qcsys.svg?style=popout-square)](https://pypi.org/project/qcsys/)
+
+[S. R. Jha](https://github.com/Phionx), [S. Chowdhury](https://github.com/shoumikdc), [M. Hays](https://scholar.google.com/citations?user=06z0MjwAAAAJ), [J. A. Grover](https://scholar.google.com/citations?user=igewch8AAAAJ), [W. D. Oliver](https://scholar.google.com/citations?user=4vNbnqcAAAAJ&hl=en)
+
+
+**Docs:** [https://equs.github.io/qcsys](https://equs.github.io/qcsys)
 
 Built on JAX,  `qcsys` presents a scalable way to assemble and simulate systems of quantum circuits. 
 
 ## Installation
 
-*Conda users, please make sure to `conda install pip` before running any pip installation if you want to install `qcsys` into your conda environment.*
+`qcsys` is published on PyPI. Simply run the following code to install the package:
 
-`qcsys` may soon be published on PyPI. Once it is, simply run the following code to install the package:
 
 ```bash
 pip install qcsys
 ```
-If you also want to download the dependencies needed to run optional tutorials, please use `pip install qcsys[dev,docs]` or `pip install 'qcsys[dev,docs]'` (for `zsh` users).
 
+For more details, please visit the getting started > installation section of our [docs](https://equs.github.io/qcsys/getting_started/installation.html).
 
-To check if the installation was successful, run:
+## An Example
 
-```python
->>> import qcsys
-```
-
-## Building from source
-
-To build `qcsys` from source, pip install using:
-
-```bash
-git clone https://github.com/EQuS/qcsys.git
-cd qcsys
-pip install --upgrade .
-```
-
-If you also want to download the dependencies needed to run optional tutorials, please use `pip install --upgrade .[dev,docs]` or `pip install --upgrade '.[dev,docs]'` (for `zsh` users).
-
-#### Installation for Devs
-
-If you intend to contribute to this project, please install `qcsys` in editable mode as follows:
-```bash
-git clone https://github.com/EQuS/qcsys.git
-cd qcsys
-pip install -e .[dev,docs]
-```
-
-Please use `pip install -e '.[dev,docs]'` if you are a `zsh` user.
-
-## Documentation
-
-Documentation should be viewable here: [https://github.com/pages/EQuS/qcsys/](https://github.com/pages/EQuS/qcsys/) 
-
-### Build and view locally
-
-To view documentation locally, plesae make sure the install the requirements under the `docs` extra, as specified above. Then, run the following:
+Here's an example on how to use `qcsys`:
 
 ```
-mkdocs serve
+import qcsys as qs
+
+
+# Devices ----
+
+
+_, Ec_a, El_a = qs.calculate_lambda_over_four_resonator_zpf(3, 50)
+
+resonator = qs.Resonator.create(
+    10,
+    {"Ec": Ec_a, "El": El_a},
+    N_pre_diag=10,
+)
+
+
+Ec_q = 1
+El_q = 0.5
+Ej_q = 8
+
+qubit = qs.Fluxonium.create(
+    25,
+    {"Ec": Ec_q, "El": El_q, "Ej": Ej_q, "phi_ext": 0.47},
+    use_linear=False,
+    N_pre_diag=100,
+)
+
+# System ----
+
+g_rq = 0.3
+
+devices = [resonator, qubit]
+r_indx = 0
+q_indx = 1
+Ns = [device.N for device in devices]
+
+a0 = qs.promote(resonator.ops["a"], r_indx, Ns)
+a0_dag = qs.promote(resonator.ops["a_dag"], r_indx, Ns)
+
+q0 = qs.promote(qubit.ops["a"], q_indx, Ns)
+q0_dag = qs.promote(qubit.ops["a_dag"], q_indx, Ns)
+
+couplings = []
+couplings.append(-g_rq * (a0 - a0_dag) @ (q0 - q0_dag))
+
+system = qs.System.create(devices, couplings=couplings)
+system.params["g_rq"] = g_rq
+
+Es, kets = system.calculate_eig_linear()
+
+# chi ----
+χ_e = Es[1:, 1] - Es[:-1, 1]
+χ_g = Es[1:, 0] - Es[:-1, 0]
+χ = χ_e - χ_g
+
+# kerr ----
+# kerr[0,n] = (E(n+2, g) - E(n+1, g)) - (E(n+1, g) - E(n, g))
+# kerr[1,n] = (E(n+2, e) - E(n+1, e)) - (E(n+1, e) - E(n, e))
+K_g = (Es[2:, 0] - Es[1:-1, 0]) - (Es[1:-1, 0] - Es[0:-2, 0])
+K_e = (Es[2:, 1] - Es[1:-1, 1]) - (Es[1:-1, 1] - Es[0:-2, 1])
+
+χ, K_g, K_e
 ```
 
-The documentation should now be at the url provided by the above command. 
 
-### Updating Docs
 
-The documentation should be updated automatically when any changes are made to the `main` branch. However, updates can also be forced by running:
+## Acknowledgements & History
 
+**Core Devs:** [Shantanu A. Jha](https://github.com/Phionx), [Shoumik Chowdhury](https://github.com/shoumikdc)
+
+
+This package was initially developed in early 2023 to aid in the design of a superconducting circuit device made for bosonic quantum error correction. This package was also briefly announced to the world at APS March Meeting 2023. Since then, this package has been open sourced and developed while conducting research in the Engineering Quantum Systems Group at MIT with invaluable advice from [Prof. William D. Oliver](https://equs.mit.edu/william-d-oliver/). 
+
+## Citation
+
+Thank you for taking the time to try our package out. If you found it useful in your research, please cite us as follows:
+
+``` 
+@unpublished{jha2024jaxquantum,
+  title  = {An auto differentiable and hardware accelerated software toolkit for quantum circuit design, simulation and control},
+  author = {Shantanu R. Jha, Shoumik Chowdhury, Max Hays, Jeff A. Grover, William D. Oliver},
+  year   = {2024},
+  url    = {https://github.com/EQuS/jaxquantum, https://github.com/EQuS/bosonic-jax, https://github.com/EQuS/qcsys}
+}
 ```
-mkdocs gh-deploy --force
-```
-This will build your documentation and deploy it to a branch gh-pages in your repository.
-
-## Acknowledgements
-
-**Core Devs:** [Shantanu Jha](https://github.com/Phionx) and [Shoumik Chowdhury](https://github.com/shoumikdc).
+> S. R. Jha, S. Chowdhury, M. Hays, J. A. Grover, W. D. Oliver. An auto differentiable and hardware accelerated software toolkit for quantum circuit design, simulation and control (2024), in preparation.
 
 
-This project was created by the Engineering Quantum Systems group at MIT.
+## Contributions & Contact
 
+This package is open source and, as such, very open to contributions. Please don't hesitate to open an issue, report a bug, request a feature, or create a pull request. We are also open to deeper collaborations to create a tool that is more useful for everyone. If a discussion would be helpful, please email [shanjha@mit.edu](mailto:shanjha@mit.edu) to set up a meeting. 
