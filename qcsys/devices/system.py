@@ -43,7 +43,7 @@ def calculate_eig(Ns, H):
     )
 
 
-def promote(op, device_num, Ns):
+def promote(op: jqt.Qarray, device_num, Ns):
     I_ops = [jqt.identity(N) for N in Ns]
     return jqt.tensor(*I_ops[:device_num], op, *I_ops[device_num + 1 :])
 

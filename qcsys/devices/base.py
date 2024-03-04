@@ -4,12 +4,12 @@ from abc import abstractmethod, ABC
 from typing import Dict, Any
 
 from flax import struct
-from jax import tree_util, Array
-from jax import config
+from jax import config, Array
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 
 from qcsys.common.utils import harm_osc_wavefunction
+import jaxquantum as jqt
 
 config.update("jax_enable_x64", True)
 
@@ -41,7 +41,7 @@ class Device(ABC):
         return self.full_ops()
 
     @abstractmethod
-    def common_ops(self) -> Dict[str, Array]:
+    def common_ops(self) -> Dict[str, jqt.Qarray]:
         """Set up common ops in the linear basis."""
 
     @abstractmethod
@@ -68,7 +68,7 @@ class Device(ABC):
         return self.get_H_linear() if self._use_linear else self.get_H_full()
 
     def _calculate_eig_systems(self):
-        evs, evecs = jnp.linalg.eigh(self._get_H_in_linear_basis())  # Hermitian
+        evs, evecs = jnp.linalg.eigh(self._get_H_in_linear_basis().data)  # Hermitian
         idxs_sorted = jnp.argsort(evs)
         return evs[idxs_sorted], evecs[:, idxs_sorted]
 
@@ -81,13 +81,21 @@ class Device(ABC):
         eig_systems["vals"] = eig_systems["vals"]
         return eig_systems
 
-    def get_op_in_H_eigenbasis(self, op):
+    def get_op_in_H_eigenbasis(self, op: jqt.Qarray):
         evecs = self.eig_systems["vecs"][:, : self.N]
         return get_op_in_new_basis(op, evecs)
     
-    def get_vec_in_H_eigenbasis(self, vec):
+    def get_op_data_in_H_eigenbasis(self, op: Array):
+        evecs = self.eig_systems["vecs"][:, : self.N]
+        return get_op_data_in_new_basis(op, evecs)
+
+    def get_vec_in_H_eigenbasis(self, vec: jqt.Qarray):
         evecs = self.eig_systems["vecs"][:, : self.N]
         return get_vec_in_new_basis(vec, evecs)
+    
+    def get_vec_data_in_H_eigenbasis(self, vec: Array):
+        evecs = self.eig_systems["vecs"][:, : self.N]
+        return get_vec_data_in_new_basis(vec, evecs)
 
     def full_ops(self):
         # TODO: use JAX vmap here
@@ -100,13 +108,19 @@ class Device(ABC):
         return ops
 
 
-def get_op_in_new_basis(op, evecs):
-    op = jnp.dot(jnp.conjugate(evecs.transpose()), jnp.dot(op, evecs))
-    return op
+def get_op_in_new_basis(op: jqt.Qarray, evecs: Array) -> jqt.Qarray:
+    dims = op.dims
+    return jqt.Qarray.create(get_op_data_in_new_basis(op.data, evecs), dims=dims)
 
-def get_vec_in_new_basis(vec, evecs):
-    vec = jnp.dot(jnp.conjugate(evecs.transpose()), vec)
-    return vec
+def get_op_data_in_new_basis(op_data: Array, evecs: Array) -> Array:
+    return jnp.dot(jnp.conjugate(evecs.transpose()), jnp.dot(op_data, evecs))
+
+def get_vec_in_new_basis(vec: jqt.Qarray, evecs: Array) -> jqt.Qarray:
+    dims = vec.dims
+    return jqt.Qarray.create(get_vec_data_in_new_basis(vec.data, evecs), dims=dims)
+
+def get_vec_data_in_new_basis(vec_data: Array, evecs: Array) -> Array:
+    return jnp.dot(jnp.conjugate(evecs.transpose()), vec_data)
 
 
 @struct.dataclass
@@ -129,7 +143,7 @@ class FluxDevice(Device):
         basis_functions = jnp.array(basis_functions)
 
         # transform to better diagonal basis
-        basis_functions_in_H_eigenbasis = self.get_vec_in_H_eigenbasis(basis_functions)
+        basis_functions_in_H_eigenbasis = self.get_vec_data_in_H_eigenbasis(basis_functions)
         
         # the below is equivalent to evecs_in_H_eigenbasis @ basis_functions_in_H_eigenbasis
         # since evecs in H_eigenbasis is diagonal, i.e. the identity matrix
