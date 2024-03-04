@@ -16,14 +16,16 @@ EXTRA_REQUIREMENTS = {
         "jupyterlab>=3.1.0",
         "mypy",
         "pylint",
-        "black",
+        "black"
+    ],
+    "docs": [
         "mkdocs",
         "mkdocs-material",
-        "mkdocs-gen-files",
         "mkdocs-literate-nav",
         "mkdocs-section-index",
+        "mkdocs-gen-files",
         "mkdocstrings-python",
-    ],
+    ]
 }
 
 # Read long description from README.

@@ -19,7 +19,7 @@ Built on JAX,  `qcsys` presents a scalable way to assemble and simulate systems 
 ```bash
 pip install qcsys
 ```
-If you also want to download the dependencies needed to run optional tutorials, please use `pip install qcsys[dev]` or `pip install 'qcsys[dev]'` (for `zsh` users).
+If you also want to download the dependencies needed to run optional tutorials, please use `pip install qcsys[dev,docs]` or `pip install 'qcsys[dev,docs]'` (for `zsh` users).
 
 
 To check if the installation was successful, run:
@@ -38,7 +38,7 @@ cd qcsys
 pip install --upgrade .
 ```
 
-If you also want to download the dependencies needed to run optional tutorials, please use `pip install --upgrade .[dev]` or `pip install --upgrade '.[dev]'` (for `zsh` users).
+If you also want to download the dependencies needed to run optional tutorials, please use `pip install --upgrade .[dev,docs]` or `pip install --upgrade '.[dev,docs]'` (for `zsh` users).
 
 #### Installation for Devs
 
@@ -46,32 +46,33 @@ If you intend to contribute to this project, please install `qcsys` in editable 
 ```bash
 git clone https://github.com/EQuS/qcsys.git
 cd qcsys
-pip install -e .[dev]
+pip install -e .[dev,docs]
 ```
 
-Please use `pip install -e '.[dev]'` if you are a `zsh` user.
+Please use `pip install -e '.[dev,docs]'` if you are a `zsh` user.
 
 ## Documentation
 
 Documentation should be viewable here: [https://github.com/pages/EQuS/qcsys/](https://github.com/pages/EQuS/qcsys/) 
 
-#### View locally
+### Build and view locally
 
+To view documentation locally, plesae make sure the install the requirements under the `docs` extra, as specified above. Then, run the following:
 
-To view documentation locally, please open `docs/build/html/index.html` in your browser.
-
-
-#### Build documentation 
-
-To rebuild documentation, please start in the root folder and run:
-
-```sh
-cd docs
-make clean
-make html
+```
+mkdocs serve
 ```
 
-*You may also have to delete the `docs/source/_autosummary` directory before running the above commands.*
+The documentation should now be at the url provided by the above command. 
+
+### Updating Docs
+
+The documentation should be updated automatically when any changes are made to the `main` branch. However, updates can also be forced by running:
+
+```
+mkdocs gh-deploy --force
+```
+This will build your documentation and deploy it to a branch gh-pages in your repository.
 
 ## Acknowledgements
 
