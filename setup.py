@@ -68,7 +68,7 @@ setup(
     keywords="quantum computing circuits",
     python_requires=">=3.7",
     project_urls={
-        "Documentation": "https://github.com/EQuS/qcsys",
+        "Documentation": "https://equs.github.io/qcsys",
         "Source Code": "https://github.com/EQuS/qcsys",
         "Tutorials": "https://github.com/EQuS/qcsys/tree/master/tutorials",
     },
