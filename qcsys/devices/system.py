@@ -17,11 +17,11 @@ config.update("jax_enable_x64", True)
 
 
 @partial(jit, static_argnums=(0,))
-def calculate_eig(Ns, H):
+def calculate_eig(Ns, H: jqt.Qarray):
     N_tot = math.prod(Ns)
     edxs = jnp.arange(N_tot)
 
-    vals, kets = jnp.linalg.eigh(H)
+    vals, kets = jnp.linalg.eigh(H.data)
     kets = kets.T
 
     def calc_quantum_number(edx):
@@ -43,7 +43,7 @@ def calculate_eig(Ns, H):
     )
 
 
-def promote(op, device_num, Ns):
+def promote(op: jqt.Qarray, device_num, Ns):
     I_ops = [jqt.identity(N) for N in Ns]
     return jqt.tensor(*I_ops[:device_num], op, *I_ops[device_num + 1 :])
 

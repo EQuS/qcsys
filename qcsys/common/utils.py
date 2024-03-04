@@ -7,14 +7,6 @@ from jax import jit, vmap, grad
 import jax.scipy as jsp
 
 @jit
-def cosm(x):
-    return (jsp.linalg.expm(1j*x) + jsp.linalg.expm(-1j*x))/2
-
-@jit
-def sinm(x):
-    return (jsp.linalg.expm(1j*x) - jsp.linalg.expm(-1j*x))/(2j)
-
-@jit
 def factorial_approx(n):
     return jsp.special.gamma(n+1)
 

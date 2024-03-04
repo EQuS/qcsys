@@ -6,7 +6,6 @@ import jaxquantum as jqt
 import jax.numpy as jnp
 
 from qcsys.devices.base import FluxDevice
-from qcsys.common.utils import cosm, sinm
 
 config.update("jax_enable_x64", True)
 
@@ -54,9 +53,9 @@ class ATS(FluxDevice):
 
         phi_delta_ext_op = self.params["phi_delta_ext"] * id
 
-        H_nl = - 2 * Ej * cosm(phi_b + 2 * jnp.pi * phi_delta_ext_op) * jnp.cos(2 * jnp.pi * self.params["phi_sum_ext"])
-        H_nl += 2 * dEj * sinm(phi_b + 2 * jnp.pi * phi_delta_ext_op) * jnp.sin(2 * jnp.pi * self.params["phi_sum_ext"]) 
-        H_nl += 2 * Ej2 * cosm(2*phi_b + 2 * 2 * jnp.pi * phi_delta_ext_op) * jnp.cos(2 * 2 * jnp.pi * self.params["phi_sum_ext"])
+        H_nl = - 2 * Ej * jqt.cosm(phi_b + 2 * jnp.pi * phi_delta_ext_op) * jnp.cos(2 * jnp.pi * self.params["phi_sum_ext"])
+        H_nl += 2 * dEj * jqt.sinm(phi_b + 2 * jnp.pi * phi_delta_ext_op) * jnp.sin(2 * jnp.pi * self.params["phi_sum_ext"]) 
+        H_nl += 2 * Ej2 * jqt.cosm(2*phi_b + 2 * 2 * jnp.pi * phi_delta_ext_op) * jnp.cos(2 * 2 * jnp.pi * self.params["phi_sum_ext"])
 
         H = self.get_H_linear() + H_nl
         return H
