@@ -1,7 +1,7 @@
 """ Base device."""
 
 from abc import abstractmethod, ABC
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from flax import struct
 from jax import config, Array
@@ -83,7 +83,8 @@ class Device(ABC):
 
     def get_op_in_H_eigenbasis(self, op: jqt.Qarray):
         evecs = self.eig_systems["vecs"][:, : self.N]
-        return get_op_in_new_basis(op, evecs)
+        dims = [[self.N], [self.N]]
+        return get_op_in_new_basis(op, evecs, dims)
     
     def get_op_data_in_H_eigenbasis(self, op: Array):
         evecs = self.eig_systems["vecs"][:, : self.N]
@@ -91,7 +92,11 @@ class Device(ABC):
 
     def get_vec_in_H_eigenbasis(self, vec: jqt.Qarray):
         evecs = self.eig_systems["vecs"][:, : self.N]
-        return get_vec_in_new_basis(vec, evecs)
+        if vec.qtype == jqt.Qtypes.ket:
+            dims = [[self.N],[1]]
+        else:
+            dims = [[1], [self.N]]
+        return get_vec_in_new_basis(vec, evecs, dims)
     
     def get_vec_data_in_H_eigenbasis(self, vec: Array):
         evecs = self.eig_systems["vecs"][:, : self.N]
@@ -108,15 +113,13 @@ class Device(ABC):
         return ops
 
 
-def get_op_in_new_basis(op: jqt.Qarray, evecs: Array) -> jqt.Qarray:
-    dims = op.dims
+def get_op_in_new_basis(op: jqt.Qarray, evecs: Array, dims: List[List[int]]) -> jqt.Qarray:
     return jqt.Qarray.create(get_op_data_in_new_basis(op.data, evecs), dims=dims)
 
 def get_op_data_in_new_basis(op_data: Array, evecs: Array) -> Array:
     return jnp.dot(jnp.conjugate(evecs.transpose()), jnp.dot(op_data, evecs))
 
-def get_vec_in_new_basis(vec: jqt.Qarray, evecs: Array) -> jqt.Qarray:
-    dims = vec.dims
+def get_vec_in_new_basis(vec: jqt.Qarray, evecs: Array, dims: List[List[int]]) -> jqt.Qarray:
     return jqt.Qarray.create(get_vec_data_in_new_basis(vec.data, evecs), dims=dims)
 
 def get_vec_data_in_new_basis(vec_data: Array, evecs: Array) -> Array:
