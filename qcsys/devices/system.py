@@ -17,11 +17,11 @@ config.update("jax_enable_x64", True)
 
 
 @partial(jit, static_argnums=(0,))
-def calculate_eig(Ns, H):
+def calculate_eig(Ns, H: jqt.Qarray):
     N_tot = math.prod(Ns)
     edxs = jnp.arange(N_tot)
 
-    vals, kets = jnp.linalg.eigh(H)
+    vals, kets = jnp.linalg.eigh(H.data)
     kets = kets.T
 
     def calc_quantum_number(edx):

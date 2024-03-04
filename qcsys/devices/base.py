@@ -60,9 +60,7 @@ class Device(ABC):
         """
         Return diagonalized H. Explicitly keep only diagonal elements of matrix.
         """
-        return jnp.diag(
-            jnp.diag(self.get_op_in_H_eigenbasis(self._get_H_in_linear_basis()))
-        )
+        return self.get_op_in_H_eigenbasis(self._get_H_in_linear_basis()).keep_only_diag_elements()
 
     def _get_H_in_linear_basis(self):
         return self.get_H_linear() if self._use_linear else self.get_H_full()
