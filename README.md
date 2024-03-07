@@ -24,7 +24,7 @@ For more details, please visit the getting started > installation section of our
 
 Here's an example on how to use `qcsys`:
 
-```
+```python
 import qcsys as qs
 
 
@@ -101,7 +101,7 @@ This package was initially developed in early 2023 to aid in the design of a sup
 
 Thank you for taking the time to try our package out. If you found it useful in your research, please cite us as follows:
 
-``` 
+```bibtex
 @unpublished{jha2024jaxquantum,
   title  = {An auto differentiable and hardware accelerated software toolkit for quantum circuit design, simulation and control},
   author = {Shantanu R. Jha, Shoumik Chowdhury, Max Hays, Jeff A. Grover, William D. Oliver},
