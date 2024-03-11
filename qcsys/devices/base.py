@@ -139,7 +139,7 @@ class FluxDevice(Device):
         basis_functions = []
         for n in range(self.N_pre_diag):
             basis_functions.append(
-                harm_osc_wavefunction(n, phi_vals, phi_osc)
+                harm_osc_wavefunction(n, phi_vals, jnp.real(phi_osc))
             )
         basis_functions = jnp.array(basis_functions)
 
@@ -156,21 +156,28 @@ class FluxDevice(Device):
         """Return potential energy as a funciton of phi."""
 
 
-    def plot_wavefunctions(self, phi_vals):
+    def plot_wavefunctions(self, phi_vals, max_n=None, ax=None, plot_amplitude=True):
         """Plot wavefunctions at phi_exts."""
         wavefunctions = self.calculate_wavefunctions(phi_vals)
         energy_levels = self.eig_systems["vals"][:self.N]
 
         potential = self.potential(phi_vals)
 
-        fig, axs = plt.subplots(1,1, figsize=(6,5), dpi=200, squeeze=False)
+        if ax is None:
+            fig, ax = plt.subplots(1,1, figsize=(6,5), dpi=200)
+        else:
+            fig = ax.get_figure()
 
         min_val = None
         max_val = None
 
-        ax = axs[0][0]
-        for n in range(self.N):
-            wf_vals = wavefunctions[n, :].real + energy_levels[n]
+        max_n = self.N if max_n is None else max_n
+        for n in range(max_n):
+            if plot_amplitude:
+                wf_vals = jnp.abs(wavefunctions[n, :])**2
+            else:
+                wf_vals = wavefunctions[n, :].real
+            wf_vals += energy_levels[n]
             curr_min_val = min(wf_vals)
             curr_max_val = max(wf_vals)
 
@@ -181,6 +188,7 @@ class FluxDevice(Device):
                 max_val = curr_max_val
 
             ax.plot(phi_vals, wf_vals, label=f"{n}")
+            ax.fill_between(phi_vals, energy_levels[n], wf_vals, alpha=0.5)
         
         ax.plot(phi_vals, potential, label="potential", color="black", linestyle="--")
 
@@ -192,5 +200,5 @@ class FluxDevice(Device):
         plt.legend(fontsize=6)
         fig.tight_layout()
 
-        return axs
+        return ax
 
