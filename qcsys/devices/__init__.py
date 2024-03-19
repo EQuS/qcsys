@@ -7,6 +7,7 @@ from .drive import *
 from .resonator import *
 from .kno import *
 from .transmon import *
+from .tunable_transmon import *
 from .transmon_single_charge_basis import *
 from .squid_transmon import *
 from .fluxonium import *
