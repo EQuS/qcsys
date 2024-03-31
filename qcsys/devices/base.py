@@ -156,7 +156,7 @@ class FluxDevice(Device):
         """Return potential energy as a funciton of phi."""
 
 
-    def plot_wavefunctions(self, phi_vals, max_n=None, ax=None, plot_amplitude=True):
+    def plot_wavefunctions(self, phi_vals, max_n=None, which=None, ax=None, mode="abs"):
         """Plot wavefunctions at phi_exts."""
         wavefunctions = self.calculate_wavefunctions(phi_vals)
         energy_levels = self.eig_systems["vals"][:self.N]
@@ -171,12 +171,19 @@ class FluxDevice(Device):
         min_val = None
         max_val = None
 
+        assert max_n is None or which is None, "Can't specify both max_n and which"
+
         max_n = self.N if max_n is None else max_n
-        for n in range(max_n):
-            if plot_amplitude:
+        levels = range(max_n) if which is None else which
+
+        for n in levels:
+            if mode == "abs":
                 wf_vals = jnp.abs(wavefunctions[n, :])**2
-            else:
+            elif mode == "real":
                 wf_vals = wavefunctions[n, :].real
+            elif mode == "imag":
+                wf_vals = wavefunctions[n, :].imag
+
             wf_vals += energy_levels[n]
             curr_min_val = min(wf_vals)
             curr_max_val = max(wf_vals)
@@ -194,8 +201,17 @@ class FluxDevice(Device):
 
         ax.set_ylim([min_val-1, max_val+1])
 
-        ax.set_xlabel(r"$\varphi/\Phi_0$")
+        ax.set_xlabel(r"$\Phi/\Phi_0$")
         ax.set_ylabel(r"Energy [GHz]")
+
+        if mode == "abs":
+            title_str = r"$|\psi_n(\Phi)|^2$"
+        elif mode == "real":
+            title_str = r"Re($\psi_n(\Phi)$)"
+        elif mode == "imag":
+            title_str = r"Im($\psi_n(\Phi)$)"
+
+        ax.set_title(f"{title_str}")
 
         plt.legend(fontsize=6)
         fig.tight_layout()
