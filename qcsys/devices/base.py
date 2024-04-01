@@ -125,6 +125,14 @@ def get_vec_data_in_new_basis(vec_data: Array, evecs: Array) -> Array:
 
 
 @struct.dataclass
+class CompactPhaseDevice(Device):    
+    @abstractmethod
+    def potential(self, phi):
+        """Return potential energy as a function of phi."""
+
+
+
+@struct.dataclass
 class FluxDevice(Device):
     @abstractmethod
     def phi_zpf(self):
@@ -153,7 +161,7 @@ class FluxDevice(Device):
     
     @abstractmethod
     def potential(self, phi):
-        """Return potential energy as a funciton of phi."""
+        """Return potential energy as a function of phi."""
 
 
     def plot_wavefunctions(self, phi_vals, max_n=None, which=None, ax=None, mode="abs"):

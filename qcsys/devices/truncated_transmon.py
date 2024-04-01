@@ -7,13 +7,13 @@ import jax.numpy as jnp
 import jax.scipy as jsp
 from jax import jit
 
-from qcsys.devices.base import CompactPhaseDevice
+from qcsys.devices.base import FluxDevice
 
 config.update("jax_enable_x64", True)
 
 
 @struct.dataclass
-class Transmon(CompactPhaseDevice):
+class TruncatedTransmon(FluxDevice):
     """
     Transmon Device.
     """
@@ -30,6 +30,14 @@ class Transmon(CompactPhaseDevice):
         ops["phi"] = self.phi_zpf() * (ops["a"] + ops["a_dag"])
         ops["n"] = 1j * self.n_zpf() * (ops["a_dag"] - ops["a"])
         return ops
+
+    def phi_zpf(self):
+        """Return Phase ZPF."""
+        return (2 * self.params["Ec"] / self.params["Ej"]) ** (0.25)
+
+    def n_zpf(self):
+        """Return Charge ZPF."""
+        return (self.params["Ej"] / (32 * self.params["Ec"])) ** (0.25)
 
     def get_linear_ω(self):
         """Get frequency of linear terms."""
