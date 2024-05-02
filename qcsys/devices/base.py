@@ -1,6 +1,8 @@
+
 """ Base device."""
 
 from abc import abstractmethod, ABC
+from enum import Enum
 from typing import Dict, Any, List
 
 from flax import struct
@@ -14,18 +16,67 @@ import jaxquantum as jqt
 config.update("jax_enable_x64", True)
 
 
+class BasisTypes(str, Enum):
+    fock = "fock"
+    charge = "charge"
+
+    @classmethod
+    def from_str(cls, string: str):
+        return cls(string)
+
+    def __str__(self):
+        return self.value
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __eq__(self, other):
+        return self.value == other.value
+
+    def __ne__(self, other):
+        return self.value != other.value
+
+    def __hash__(self):
+        return hash(self.value)
+
+class HamiltonianTypes(str, Enum):
+    linear = "linear"
+    truncated = "truncated"
+    full = "full"
+
+    @classmethod
+    def from_str(cls, string: str):
+        return cls(string)
+
+    def __str__(self):
+        return self.value
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __eq__(self, other):
+        return self.value == other.value
+
+    def __ne__(self, other):
+        return self.value != other.value
+
+    def __hash__(self):
+        return hash(self.value)
+
 @struct.dataclass
 class Device(ABC):
+    basis: BasisTypes = struct.field(pytree_node=False)
     N: int = struct.field(pytree_node=False)
     N_pre_diag: int = struct.field(pytree_node=False)
     params: Dict[str, Any]
     _label: int = struct.field(pytree_node=False)
-    _use_linear: bool = struct.field(pytree_node=False)
+    _mode: HamiltonianTypes = struct.field(pytree_node=False)
 
     @classmethod
-    def create(cls, N, params, label=0, use_linear=True, N_pre_diag=None):
+    def create(cls, N, params, label=0, use_linear=None, N_pre_diag=None, mode: HamiltonianTypes =None, basis: BasisTypes=None):
         if N_pre_diag is None:
             N_pre_diag = N
+        
         return cls(N, N_pre_diag, params, label, use_linear)
 
     @property
