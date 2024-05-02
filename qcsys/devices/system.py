@@ -88,6 +88,6 @@ class System:
         H_couplings = self.get_H_couplings()
         return H_bare + H_couplings
 
-    def calculate_eig_linear(self):
+    def calculate_eig(self):
         H = self.get_H()
         return calculate_eig(self.Ns, H)

@@ -5,7 +5,7 @@ from jax import config
 import jaxquantum as jqt
 import jax.numpy as jnp
 
-from qcsys.devices.base import FluxDevice
+from qcsys.devices.base import FluxDevice, HamiltonianTypes
 
 config.update("jax_enable_x64", True)
 
@@ -69,5 +69,10 @@ class Fluxonium(FluxDevice):
         """Return potential energy for a given phi."""
         phi_ext = self.params["phi_ext"]
         V_linear = 0.5 * self.params["El"] * (2 * jnp.pi * phi) ** 2
+    
+        if self.hamiltonian == HamiltonianTypes.linear:
+            return V_linear
+        
         V_nonlinear = -self.params["Ej"] * jnp.cos(2.0 * jnp.pi * (phi - phi_ext))
-        return V_linear + V_nonlinear
+        if self.hamiltonian == HamiltonianTypes.full:
+            return V_linear + V_nonlinear

@@ -73,7 +73,7 @@ class Device(ABC):
     _hamiltonian: HamiltonianTypes = struct.field(pytree_node=False)
 
     @classmethod
-    def param_validation(cls, params, use_linear, hamiltonian, basis):
+    def param_validation(cls, params, hamiltonian, basis):
         """ This can be overridden by subclasses."""
         pass
 
@@ -87,7 +87,7 @@ class Device(ABC):
         if use_linear is not None and use_linear:
             _hamiltonian = HamiltonianTypes.linear
         
-        cls.param_validation(params, use_linear, _hamiltonian, _basis)
+        cls.param_validation(params, _hamiltonian, _basis)
 
         return cls(N, N_pre_diag, params, label, _basis, _hamiltonian)
     
@@ -198,14 +198,6 @@ def get_vec_in_new_basis(vec: jqt.Qarray, evecs: Array, dims: List[List[int]]) -
 
 def get_vec_data_in_new_basis(vec_data: Array, evecs: Array) -> Array:
     return jnp.dot(jnp.conjugate(evecs.transpose()), vec_data)
-
-
-@struct.dataclass
-class CompactPhaseDevice(Device):    
-    @abstractmethod
-    def potential(self, phi):
-        """Return potential energy as a function of phi."""
-
 
 
 @struct.dataclass

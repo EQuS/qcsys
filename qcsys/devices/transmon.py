@@ -7,30 +7,44 @@ import jax.numpy as jnp
 import jax.scipy as jsp
 from jax import jit
 
-from qcsys.devices.base import CompactPhaseDevice
+from qcsys.devices.base import BasisTypes, FluxDevice, HamiltonianTypes
 
 config.update("jax_enable_x64", True)
 
 
 @struct.dataclass
-class Transmon(CompactPhaseDevice):
+class Transmon(FluxDevice):
     """
     Transmon Device.
     """
 
+    @classmethod
+    def param_validation(cls, params, hamiltonian, basis):
+        """ This can be overridden by subclasses."""
+        if hamiltonian == HamiltonianTypes.linear:
+            assert basis == BasisTypes.fock, "Linear Hamiltonian only works with Fock basis."
+
+        elif hamiltonian == HamiltonianTypes.full:
+            assert basis == BasisTypes.charge, "Full Hamiltonian only works with charge basis."
+        
+
     def common_ops(self):
-        """ Written in the linear basis. """
+        """ Written in the specified basis. """
         
         ops = {}
 
         N = self.N_pre_diag
-        ops["id"] = jqt.identity(N)
-        ops["a"] = jqt.destroy(N)
-        ops["a_dag"] = jqt.create(N)
-        ops["phi"] = self.phi_zpf() * (ops["a"] + ops["a_dag"])
-        ops["n"] = 1j * self.n_zpf() * (ops["a_dag"] - ops["a"])
 
-        ops["cos(φ)"] = jqt.cosm(ops["phi"])
+        if self.basis == BasisTypes.fock:
+            ops["id"] = jqt.identity(N)
+            ops["a"] = jqt.destroy(N)
+            ops["a_dag"] = jqt.create(N)
+            ops["phi"] = self.phi_zpf() * (ops["a"] + ops["a_dag"])
+            ops["n"] = 1j * self.n_zpf() * (ops["a_dag"] - ops["a"])
+
+        elif self.basis == BasisTypes.charge:
+            ops["id"] = jqt.identity(N)
+            ops["cos(φ)"] = jqt.cosm(ops["phi"])
 
         return ops
 
