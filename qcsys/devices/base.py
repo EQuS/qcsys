@@ -73,7 +73,7 @@ class Device(ABC):
     _hamiltonian: HamiltonianTypes = struct.field(pytree_node=False)
 
     @classmethod
-    def param_validation(cls, params, hamiltonian, basis):
+    def param_validation(cls, N, N_pre_diag, params, hamiltonian, basis):
         """ This can be overridden by subclasses."""
         pass
 
@@ -87,7 +87,7 @@ class Device(ABC):
         if use_linear is not None and use_linear:
             _hamiltonian = HamiltonianTypes.linear
         
-        cls.param_validation(params, _hamiltonian, _basis)
+        cls.param_validation(N, N_pre_diag, params, _hamiltonian, _basis)
 
         return cls(N, N_pre_diag, params, label, _basis, _hamiltonian)
     

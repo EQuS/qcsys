@@ -19,7 +19,7 @@ class Transmon(FluxDevice):
     """
 
     @classmethod
-    def param_validation(cls, params, hamiltonian, basis):
+    def param_validation(cls, N, N_pre_diag, params, hamiltonian, basis):
         """ This can be overridden by subclasses."""
         if hamiltonian == HamiltonianTypes.linear:
             assert basis == BasisTypes.fock, "Linear Hamiltonian only works with Fock basis."
@@ -27,6 +27,7 @@ class Transmon(FluxDevice):
         elif hamiltonian == HamiltonianTypes.full:
             assert basis == BasisTypes.charge, "Full Hamiltonian only works with charge basis."
         
+        assert (N_pre_diag - 1) % 2 == 0, "N_pre_diag must be odd."
 
     def common_ops(self):
         """ Written in the specified basis. """
@@ -44,7 +45,9 @@ class Transmon(FluxDevice):
 
         elif self.basis == BasisTypes.charge:
             ops["id"] = jqt.identity(N)
-            ops["cos(φ)"] = jqt.cosm(ops["phi"])
+            ops["cos(φ)"] = 0.5*(jqt.jnp2jqt(jnp.eye(N,k=1) + jnp.eye(N,k=-1)))
+            n_max = (N - 1) // 2
+            ops["n"] = jqt.jnp2jqt(jnp.diag(jnp.arange(-n_max, n_max + 1)))
 
         return ops
 
@@ -70,21 +73,16 @@ class Transmon(FluxDevice):
         return w * self.linear_ops["a_dag"] @ self.linear_ops["a"]
 
     def get_H_full(self):
-        """Return full H in linear basis."""
-        # cos_phi_op = (
-        #     jsp.linalg.expm(1j * self.linear_ops["phi"])
-        #     + jsp.linalg.expm(-1j * self.linear_ops["phi"])
-        # ) / 2
-
+        """Return full H in specified basis."""
+        
         cos_phi_op = self.linear_ops["cos(φ)"]
-
-        H_nl = -self.Ej * cos_phi_op - self.Ej / 2 * self.linear_ops["phi"] @ self.linear_ops["phi"]
-        return self.get_H_linear() + H_nl
+        n_op = self.linear_ops["n"]
+        return 4*self.params["Ec"]*n_op@n_op - self.Ej * cos_phi_op
     
-        # n_op = self.linear_ops["n"]
-        # return 4*self.params["Ec"]*n_op@n_op - self.Ej * cos_phi_op
 
     def potential(self, phi):
         """Return potential energy for a given phi."""
-        return - self.Ej * jnp.cos(2 * jnp.pi * phi)
-
+        if self.hamiltonian == HamiltonianTypes.linear:
+            return 0.5 * self.Ej * (2 * jnp.pi * phi) ** 2
+        elif self.hamiltonian == HamiltonianTypes.full:
+            return - self.Ej * jnp.cos(2 * jnp.pi * phi)
