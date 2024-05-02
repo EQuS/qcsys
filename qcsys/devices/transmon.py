@@ -29,19 +29,26 @@ class Transmon(FluxDevice):
         ops["a_dag"] = jqt.create(N)
         ops["phi"] = self.phi_zpf() * (ops["a"] + ops["a_dag"])
         ops["n"] = 1j * self.n_zpf() * (ops["a_dag"] - ops["a"])
+
+        ops["cos(φ)"] = jqt.cosm(ops["phi"])
+
         return ops
+
+    @property
+    def Ej(self):
+        return self.params["Ej"]
 
     def phi_zpf(self):
         """Return Phase ZPF."""
-        return (2 * self.params["Ec"] / self.params["Ej"]) ** (0.25)
+        return (2 * self.params["Ec"] / self.Ej) ** (0.25)
 
     def n_zpf(self):
         """Return Charge ZPF."""
-        return (self.params["Ej"] / (32 * self.params["Ec"])) ** (0.25)
+        return (self.Ej / (32 * self.params["Ec"])) ** (0.25)
 
     def get_linear_ω(self):
         """Get frequency of linear terms."""
-        return jnp.sqrt(8 * self.params["Ec"] * self.params["Ej"])
+        return jnp.sqrt(8 * self.params["Ec"] * self.Ej)
 
     def get_H_linear(self):
         """Return linear terms in H."""
@@ -50,17 +57,20 @@ class Transmon(FluxDevice):
 
     def get_H_full(self):
         """Return full H in linear basis."""
-        cos_phi_op = (
-            jsp.linalg.expm(1j * self.linear_ops["phi"])
-            + jsp.linalg.expm(-1j * self.linear_ops["phi"])
-        ) / 2
+        # cos_phi_op = (
+        #     jsp.linalg.expm(1j * self.linear_ops["phi"])
+        #     + jsp.linalg.expm(-1j * self.linear_ops["phi"])
+        # ) / 2
 
-        H_nl = -self.params["Ej"] * cos_phi_op - self.params[
-            "Ej"
-        ] / 2 * jnp.linalg.matrix_power(self.linear_ops["phi"], 2)
+        cos_phi_op = self.linear_ops["cos(φ)"]
+
+        H_nl = -self.Ej * cos_phi_op - self.Ej / 2 * self.linear_ops["phi"] @ self.linear_ops["phi"]
         return self.get_H_linear() + H_nl
+    
+        # n_op = self.linear_ops["n"]
+        # return 4*self.params["Ec"]*n_op@n_op - self.Ej * cos_phi_op
 
     def potential(self, phi):
         """Return potential energy for a given phi."""
-        return - self.params["Ej"] * jnp.cos(2 * jnp.pi * phi)
+        return - self.Ej * jnp.cos(2 * jnp.pi * phi)
 
