@@ -106,6 +106,10 @@ class Device(ABC):
     @property
     def linear_ops(self):
         return self.common_ops()
+    
+    @property
+    def original_ops(self):
+        return self.common_ops()
 
     @property
     def ops(self):
@@ -230,7 +234,6 @@ class FluxDevice(Device):
     @abstractmethod
     def potential(self, phi):
         """Return potential energy as a function of phi."""
-
 
     def plot_wavefunctions(self, phi_vals, max_n=None, which=None, ax=None, mode="abs"):
         """Plot wavefunctions at phi_exts."""

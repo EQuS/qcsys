@@ -86,3 +86,25 @@ class Transmon(FluxDevice):
             return 0.5 * self.Ej * (2 * jnp.pi * phi) ** 2
         elif self.hamiltonian == HamiltonianTypes.full:
             return - self.Ej * jnp.cos(2 * jnp.pi * phi)
+
+    def calculate_wavefunctions(self, phi_vals):
+        """Calculate wavefunctions at phi_exts."""
+
+        if self.basis == BasisTypes.fock:
+            return super().calculate_wavefunctions(phi_vals)
+        elif self.basis == BasisTypes.charge:
+            phi_vals = jnp.array(phi_vals)
+
+            n_labels = jnp.diag(self.original_ops["n"].data)
+
+            wavefunctions = []
+            for nj in range(self.N_pre_diag):
+                wavefunction = []
+                for phi in phi_vals:
+                    wavefunction.append(
+                        (1j ** nj / jnp.sqrt(2*jnp.pi)) * jnp.sum(
+                            self.eig_systems["vecs"][:,nj] * jnp.exp(1j * phi * n_labels)
+                        )
+                    )
+                wavefunctions.append(jnp.array(wavefunction))
+            return jnp.array(wavefunctions)
