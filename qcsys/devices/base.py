@@ -65,19 +65,39 @@ class HamiltonianTypes(str, Enum):
 
 @struct.dataclass
 class Device(ABC):
-    basis: BasisTypes = struct.field(pytree_node=False)
     N: int = struct.field(pytree_node=False)
     N_pre_diag: int = struct.field(pytree_node=False)
     params: Dict[str, Any]
     _label: int = struct.field(pytree_node=False)
-    _mode: HamiltonianTypes = struct.field(pytree_node=False)
+    _basis: BasisTypes = struct.field(pytree_node=False)
+    _hamiltonian: HamiltonianTypes = struct.field(pytree_node=False)
 
     @classmethod
-    def create(cls, N, params, label=0, use_linear=None, N_pre_diag=None, mode: HamiltonianTypes =None, basis: BasisTypes=None):
+    def param_validation(cls, params, use_linear, hamiltonian, basis):
+        """ This can be overridden by subclasses."""
+        pass
+
+    @classmethod
+    def create(cls, N, params, label=0, use_linear=None, N_pre_diag=None, hamiltonian: HamiltonianTypes = None, basis: BasisTypes = None):
         if N_pre_diag is None:
             N_pre_diag = N
+
+        _basis = basis if basis is not None else BasisTypes.fock
+        _hamiltonian = hamiltonian if hamiltonian is not None else HamiltonianTypes.full
+        if use_linear is not None and use_linear:
+            _hamiltonian = HamiltonianTypes.linear
         
-        return cls(N, N_pre_diag, params, label, use_linear)
+        cls.param_validation(params, use_linear, _hamiltonian, _basis)
+
+        return cls(N, N_pre_diag, params, label, _basis, _hamiltonian)
+    
+    @property
+    def basis(self):
+        return self._basis
+    
+    @property
+    def hamiltonian(self):
+        return self._hamiltonian
 
     @property
     def label(self):
@@ -93,7 +113,7 @@ class Device(ABC):
 
     @abstractmethod
     def common_ops(self) -> Dict[str, jqt.Qarray]:
-        """Set up common ops in the linear basis."""
+        """Set up common ops in the specified basis."""
 
     @abstractmethod
     def get_linear_ω(self):
@@ -111,13 +131,18 @@ class Device(ABC):
         """
         Return diagonalized H. Explicitly keep only diagonal elements of matrix.
         """
-        return self.get_op_in_H_eigenbasis(self._get_H_in_linear_basis()).keep_only_diag_elements()
+        return self.get_op_in_H_eigenbasis(self._get_H_in_original_basis()).keep_only_diag_elements()
 
-    def _get_H_in_linear_basis(self):
-        return self.get_H_linear() if self._use_linear else self.get_H_full()
+    def _get_H_in_original_basis(self):
+        """ This returns the Hamiltonian in the original specified basis. This can be overridden by subclasses."""
 
+        if self.hamiltonian == HamiltonianTypes.linear:
+            return self.get_H_linear()
+        elif self.hamiltonian == HamiltonianTypes.full:
+            return self.get_H_full()
+        
     def _calculate_eig_systems(self):
-        evs, evecs = jnp.linalg.eigh(self._get_H_in_linear_basis().data)  # Hermitian
+        evs, evecs = jnp.linalg.eigh(self._get_H_in_original_basis().data)  # Hermitian
         idxs_sorted = jnp.argsort(evs)
         return evs[idxs_sorted], evecs[:, idxs_sorted]
 
