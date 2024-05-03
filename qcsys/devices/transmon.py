@@ -70,13 +70,13 @@ class Transmon(FluxDevice):
     def get_H_linear(self):
         """Return linear terms in H."""
         w = self.get_linear_ω()
-        return w * self.linear_ops["a_dag"] @ self.linear_ops["a"]
+        return w * self.original_ops["a_dag"] @ self.original_ops["a"]
 
     def get_H_full(self):
         """Return full H in specified basis."""
         
-        cos_phi_op = self.linear_ops["cos(φ)"]
-        n_op = self.linear_ops["n"]
+        cos_phi_op = self.original_ops["cos(φ)"]
+        n_op = self.original_ops["n"]
         return 4*self.params["Ec"]*n_op@n_op - self.Ej * cos_phi_op
     
 
