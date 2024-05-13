@@ -236,6 +236,12 @@ class FluxDevice(Device):
         """Return potential energy as a function of phi."""
 
     def plot_wavefunctions(self, phi_vals, max_n=None, which=None, ax=None, mode="abs"):
+        if self.basis == BasisTypes.fock:
+            return self.plot_wavefunctions_fock(phi_vals, max_n=max_n, which=which, ax=ax, mode=mode)
+        else:
+            raise NotImplementedError(f"The {self.basis} is not yet supported for plotting wavefunctions.")
+
+    def plot_wavefunctions_fock(self, phi_vals, max_n=None, which=None, ax=None, mode="abs"):
         """Plot wavefunctions at phi_exts."""
         wavefunctions = self.calculate_wavefunctions(phi_vals)
         energy_levels = self.eig_systems["vals"][:self.N]

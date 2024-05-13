@@ -23,7 +23,8 @@ class Transmon(FluxDevice):
         """ This can be overridden by subclasses."""
         if hamiltonian == HamiltonianTypes.linear:
             assert basis == BasisTypes.fock, "Linear Hamiltonian only works with Fock basis."
-
+        elif hamiltonian == HamiltonianTypes.truncated:
+            assert basis == BasisTypes.fock, "Truncated Hamiltonian only works with Fock basis."
         elif hamiltonian == HamiltonianTypes.full:
             assert basis == BasisTypes.charge, "Full Hamiltonian only works with charge basis."
         
@@ -79,6 +80,21 @@ class Transmon(FluxDevice):
         n_op = self.original_ops["n"]
         return 4*self.params["Ec"]*n_op@n_op - self.Ej * cos_phi_op
     
+    def get_H_truncated(self):
+        """Return truncated H in specified basis."""
+        phi_op = self.original_ops["phi"]    
+        return self.get_H_linear() - (1/24) * self.Ej * phi_op @ phi_op @ phi_op @ phi_op
+    
+    def _get_H_in_original_basis(self):
+        """ This returns the Hamiltonian in the original specified basis. This can be overridden by subclasses."""
+
+        if self.hamiltonian == HamiltonianTypes.linear:
+            return self.get_H_linear()
+        elif self.hamiltonian == HamiltonianTypes.full:
+            return self.get_H_full()
+        elif self.hamiltonian == HamiltonianTypes.truncated:
+            return self.get_H_truncated()
+    
 
     def potential(self, phi):
         """Return potential energy for a given phi."""
@@ -86,6 +102,8 @@ class Transmon(FluxDevice):
             return 0.5 * self.Ej * (2 * jnp.pi * phi) ** 2
         elif self.hamiltonian == HamiltonianTypes.full:
             return - self.Ej * jnp.cos(2 * jnp.pi * phi)
+        elif self.hamiltonian == HamiltonianTypes.truncated:
+            return 0.5 * self.Ej * (2 * jnp.pi * phi) ** 2 - (1/24) * self.Ej * (2 * jnp.pi * phi) ** 4
 
     def calculate_wavefunctions(self, phi_vals):
         """Calculate wavefunctions at phi_exts."""
