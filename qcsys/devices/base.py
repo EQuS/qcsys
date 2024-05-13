@@ -243,7 +243,7 @@ class FluxDevice(Device):
         potential = self.potential(phi_vals)
 
         if ax is None:
-            fig, ax = plt.subplots(1,1, figsize=(6,5), dpi=200)
+            fig, ax = plt.subplots(1,1, figsize = (3.5, 2.5), dpi = 1000)
         else:
             fig = ax.get_figure()
 
@@ -273,10 +273,10 @@ class FluxDevice(Device):
             if max_val is None or curr_max_val > max_val:
                 max_val = curr_max_val
 
-            ax.plot(phi_vals, wf_vals, label=f"{n}")
+            ax.plot(phi_vals, wf_vals, label=f"$|${n}$\\rangle$", linestyle = '-', linewidth = 1)
             ax.fill_between(phi_vals, energy_levels[n], wf_vals, alpha=0.5)
         
-        ax.plot(phi_vals, potential, label="potential", color="black", linestyle="--")
+        ax.plot(phi_vals, potential, label="potential", color="black", linestyle = '-', linewidth = 1)
 
         ax.set_ylim([min_val-1, max_val+1])
 
