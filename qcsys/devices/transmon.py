@@ -82,8 +82,10 @@ class Transmon(FluxDevice):
     
     def get_H_truncated(self):
         """Return truncated H in specified basis."""
-        phi_op = self.original_ops["phi"]    
-        return self.get_H_linear() - (1/24) * self.Ej * phi_op @ phi_op @ phi_op @ phi_op
+        phi_op = self.original_ops["phi"]  
+        fourth_order_term =  - (1/24) * self.Ej * phi_op @ phi_op @ phi_op @ phi_op 
+        sixth_order_term = (1/720) * self.Ej * phi_op @ phi_op @ phi_op @ phi_op @ phi_op @ phi_op
+        return self.get_H_linear() + fourth_order_term + sixth_order_term
     
     def _get_H_in_original_basis(self):
         """ This returns the Hamiltonian in the original specified basis. This can be overridden by subclasses."""
@@ -103,7 +105,11 @@ class Transmon(FluxDevice):
         elif self.hamiltonian == HamiltonianTypes.full:
             return - self.Ej * jnp.cos(2 * jnp.pi * phi)
         elif self.hamiltonian == HamiltonianTypes.truncated:
-            return 0.5 * self.Ej * (2 * jnp.pi * phi) ** 2 - (1/24) * self.Ej * (2 * jnp.pi * phi) ** 4
+            phi_scaled = 2 * jnp.pi * phi
+            second_order = 0.5 * self.Ej * phi_scaled ** 2
+            fourth_order =  - (1/24) * self.Ej * phi_scaled ** 4
+            sixth_order = (1/720) * self.Ej * phi_scaled ** 6
+            return second_order + fourth_order + sixth_order
 
     def calculate_wavefunctions(self, phi_vals):
         """Calculate wavefunctions at phi_exts."""
