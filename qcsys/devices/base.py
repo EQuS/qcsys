@@ -1,6 +1,8 @@
+
 """ Base device."""
 
 from abc import abstractmethod, ABC
+from enum import Enum
 from typing import Dict, Any, List
 
 from flax import struct
@@ -14,19 +16,88 @@ import jaxquantum as jqt
 config.update("jax_enable_x64", True)
 
 
+class BasisTypes(str, Enum):
+    fock = "fock"
+    charge = "charge"
+
+    @classmethod
+    def from_str(cls, string: str):
+        return cls(string)
+
+    def __str__(self):
+        return self.value
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __eq__(self, other):
+        return self.value == other.value
+
+    def __ne__(self, other):
+        return self.value != other.value
+
+    def __hash__(self):
+        return hash(self.value)
+
+class HamiltonianTypes(str, Enum):
+    linear = "linear"
+    truncated = "truncated"
+    full = "full"
+
+    @classmethod
+    def from_str(cls, string: str):
+        return cls(string)
+
+    def __str__(self):
+        return self.value
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __eq__(self, other):
+        return self.value == other.value
+
+    def __ne__(self, other):
+        return self.value != other.value
+
+    def __hash__(self):
+        return hash(self.value)
+
 @struct.dataclass
 class Device(ABC):
     N: int = struct.field(pytree_node=False)
     N_pre_diag: int = struct.field(pytree_node=False)
     params: Dict[str, Any]
     _label: int = struct.field(pytree_node=False)
-    _use_linear: bool = struct.field(pytree_node=False)
+    _basis: BasisTypes = struct.field(pytree_node=False)
+    _hamiltonian: HamiltonianTypes = struct.field(pytree_node=False)
 
     @classmethod
-    def create(cls, N, params, label=0, use_linear=True, N_pre_diag=None):
+    def param_validation(cls, N, N_pre_diag, params, hamiltonian, basis):
+        """ This can be overridden by subclasses."""
+        pass
+
+    @classmethod
+    def create(cls, N, params, label=0, use_linear=None, N_pre_diag=None, hamiltonian: HamiltonianTypes = None, basis: BasisTypes = None):
         if N_pre_diag is None:
             N_pre_diag = N
-        return cls(N, N_pre_diag, params, label, use_linear)
+
+        _basis = basis if basis is not None else BasisTypes.fock
+        _hamiltonian = hamiltonian if hamiltonian is not None else HamiltonianTypes.full
+        if use_linear is not None and use_linear:
+            _hamiltonian = HamiltonianTypes.linear
+        
+        cls.param_validation(N, N_pre_diag, params, _hamiltonian, _basis)
+
+        return cls(N, N_pre_diag, params, label, _basis, _hamiltonian)
+    
+    @property
+    def basis(self):
+        return self._basis
+    
+    @property
+    def hamiltonian(self):
+        return self._hamiltonian
 
     @property
     def label(self):
@@ -35,6 +106,10 @@ class Device(ABC):
     @property
     def linear_ops(self):
         return self.common_ops()
+    
+    @property
+    def original_ops(self):
+        return self.common_ops()
 
     @property
     def ops(self):
@@ -42,7 +117,7 @@ class Device(ABC):
 
     @abstractmethod
     def common_ops(self) -> Dict[str, jqt.Qarray]:
-        """Set up common ops in the linear basis."""
+        """Set up common ops in the specified basis."""
 
     @abstractmethod
     def get_linear_ω(self):
@@ -60,13 +135,18 @@ class Device(ABC):
         """
         Return diagonalized H. Explicitly keep only diagonal elements of matrix.
         """
-        return self.get_op_in_H_eigenbasis(self._get_H_in_linear_basis()).keep_only_diag_elements()
+        return self.get_op_in_H_eigenbasis(self._get_H_in_original_basis()).keep_only_diag_elements()
 
-    def _get_H_in_linear_basis(self):
-        return self.get_H_linear() if self._use_linear else self.get_H_full()
+    def _get_H_in_original_basis(self):
+        """ This returns the Hamiltonian in the original specified basis. This can be overridden by subclasses."""
 
+        if self.hamiltonian == HamiltonianTypes.linear:
+            return self.get_H_linear()
+        elif self.hamiltonian == HamiltonianTypes.full:
+            return self.get_H_full()
+        
     def _calculate_eig_systems(self):
-        evs, evecs = jnp.linalg.eigh(self._get_H_in_linear_basis().data)  # Hermitian
+        evs, evecs = jnp.linalg.eigh(self._get_H_in_original_basis().data)  # Hermitian
         idxs_sorted = jnp.argsort(evs)
         return evs[idxs_sorted], evecs[:, idxs_sorted]
 
@@ -130,7 +210,7 @@ class FluxDevice(Device):
     def phi_zpf(self):
         """Return Phase ZPF."""
 
-    def calculate_wavefunctions(self, phi_vals):
+    def _calculate_wavefunctions_fock(self, phi_vals):
         """Calculate wavefunctions at phi_exts."""
         phi_osc = self.phi_zpf() * jnp.sqrt(2) # length of oscillator
         phi_vals = jnp.array(phi_vals)
@@ -151,20 +231,48 @@ class FluxDevice(Device):
         wavefunctions = basis_functions_in_H_eigenbasis 
         return wavefunctions
     
+    def _calculate_wavefunctions_charge(self, phi_vals):
+        phi_vals = jnp.array(phi_vals)
+
+        # calculate basis functions
+        basis_functions = []
+        n_max = (self.N_pre_diag - 1) // 2
+        for n in jnp.arange(-n_max, n_max + 1):
+            basis_functions.append(
+                1/(jnp.sqrt(2*jnp.pi)) * jnp.exp(1j * n * (2*jnp.pi*phi_vals))
+            )
+        basis_functions = jnp.array(basis_functions)
+
+        # transform to better diagonal basis
+        basis_functions_in_H_eigenbasis = self.get_vec_data_in_H_eigenbasis(basis_functions)
+        
+        # the below is equivalent to evecs_in_H_eigenbasis @ basis_functions_in_H_eigenbasis
+        # since evecs in H_eigenbasis is diagonal, i.e. the identity matrix
+        phase_correction_factors =  (1j**(jnp.arange(0,self.N_pre_diag))).reshape(self.N_pre_diag,1) # TODO: review why these are needed...
+        wavefunctions = basis_functions_in_H_eigenbasis * phase_correction_factors
+        return wavefunctions
+    
     @abstractmethod
     def potential(self, phi):
-        """Return potential energy as a funciton of phi."""
-
+        """Return potential energy as a function of phi."""
 
     def plot_wavefunctions(self, phi_vals, max_n=None, which=None, ax=None, mode="abs"):
+
+        if self.basis == BasisTypes.fock:
+            _calculate_wavefunctions = self._calculate_wavefunctions_fock
+        elif self.basis == BasisTypes.charge:
+            _calculate_wavefunctions = self._calculate_wavefunctions_charge
+        else:
+            raise NotImplementedError(f"The {self.basis} is not yet supported for plotting wavefunctions.")
+
         """Plot wavefunctions at phi_exts."""
-        wavefunctions = self.calculate_wavefunctions(phi_vals)
+        wavefunctions = _calculate_wavefunctions(phi_vals)
         energy_levels = self.eig_systems["vals"][:self.N]
 
         potential = self.potential(phi_vals)
 
         if ax is None:
-            fig, ax = plt.subplots(1,1, figsize=(6,5), dpi=200)
+            fig, ax = plt.subplots(1,1, figsize = (3.5, 2.5), dpi = 1000)
         else:
             fig = ax.get_figure()
 
@@ -194,10 +302,10 @@ class FluxDevice(Device):
             if max_val is None or curr_max_val > max_val:
                 max_val = curr_max_val
 
-            ax.plot(phi_vals, wf_vals, label=f"{n}")
+            ax.plot(phi_vals, wf_vals, label=f"$|${n}$\\rangle$", linestyle = '-', linewidth = 1)
             ax.fill_between(phi_vals, energy_levels[n], wf_vals, alpha=0.5)
         
-        ax.plot(phi_vals, potential, label="potential", color="black", linestyle="--")
+        ax.plot(phi_vals, potential, label="potential", color="black", linestyle = '-', linewidth = 1)
 
         ax.set_ylim([min_val-1, max_val+1])
 
