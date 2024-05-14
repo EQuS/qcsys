@@ -210,7 +210,7 @@ class FluxDevice(Device):
     def phi_zpf(self):
         """Return Phase ZPF."""
 
-    def calculate_wavefunctions(self, phi_vals):
+    def _calculate_wavefunctions_fock(self, phi_vals):
         """Calculate wavefunctions at phi_exts."""
         phi_osc = self.phi_zpf() * jnp.sqrt(2) # length of oscillator
         phi_vals = jnp.array(phi_vals)
@@ -231,19 +231,42 @@ class FluxDevice(Device):
         wavefunctions = basis_functions_in_H_eigenbasis 
         return wavefunctions
     
+    def _calculate_wavefunctions_charge(self, phi_vals):
+        phi_vals = jnp.array(phi_vals)
+
+        # calculate basis functions
+        basis_functions = []
+        n_max = (self.N_pre_diag - 1) // 2
+        for n in jnp.arange(-n_max, n_max + 1):
+            basis_functions.append(
+                1/(jnp.sqrt(2*jnp.pi)) * jnp.exp(1j * n * (2*jnp.pi*phi_vals))
+            )
+        basis_functions = jnp.array(basis_functions)
+
+        # transform to better diagonal basis
+        basis_functions_in_H_eigenbasis = self.get_vec_data_in_H_eigenbasis(basis_functions)
+        
+        # the below is equivalent to evecs_in_H_eigenbasis @ basis_functions_in_H_eigenbasis
+        # since evecs in H_eigenbasis is diagonal, i.e. the identity matrix
+        phase_correction_factors =  (1j**(jnp.arange(0,self.N_pre_diag))).reshape(self.N_pre_diag,1) # TODO: review why these are needed...
+        wavefunctions = basis_functions_in_H_eigenbasis * phase_correction_factors
+        return wavefunctions
+    
     @abstractmethod
     def potential(self, phi):
         """Return potential energy as a function of phi."""
 
     def plot_wavefunctions(self, phi_vals, max_n=None, which=None, ax=None, mode="abs"):
+
         if self.basis == BasisTypes.fock:
-            return self.plot_wavefunctions_fock(phi_vals, max_n=max_n, which=which, ax=ax, mode=mode)
+            _calculate_wavefunctions = self._calculate_wavefunctions_fock
+        elif self.basis == BasisTypes.charge:
+            _calculate_wavefunctions = self._calculate_wavefunctions_charge
         else:
             raise NotImplementedError(f"The {self.basis} is not yet supported for plotting wavefunctions.")
 
-    def plot_wavefunctions_fock(self, phi_vals, max_n=None, which=None, ax=None, mode="abs"):
         """Plot wavefunctions at phi_exts."""
-        wavefunctions = self.calculate_wavefunctions(phi_vals)
+        wavefunctions = _calculate_wavefunctions(phi_vals)
         energy_levels = self.eig_systems["vals"][:self.N]
 
         potential = self.potential(phi_vals)

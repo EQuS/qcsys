@@ -36,7 +36,7 @@ class Resonator(FluxDevice):
     def get_H_linear(self):
         """Return linear terms in H."""
         w = self.get_linear_ω()
-        return w*self.linear_ops["a_dag"]@self.linear_ops["a"]
+        return w*(self.linear_ops["a_dag"]@self.linear_ops["a"] + 1/2)
   
     def get_H_full(self):
         """Return full H in linear basis."""
