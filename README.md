@@ -72,7 +72,7 @@ couplings.append(-g_rq * (a0 - a0_dag) @ (q0 - q0_dag))
 system = qs.System.create(devices, couplings=couplings)
 system.params["g_rq"] = g_rq
 
-Es, kets = system.calculate_eig_linear()
+Es, kets = system.calculate_eig()
 
 # chi ----
 χ_e = Es[1:, 1] - Es[:-1, 1]
