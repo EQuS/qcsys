@@ -23,11 +23,17 @@ class Resonator(FluxDevice):
         ops["a"] = jqt.destroy(N)
         ops["a_dag"] = jqt.create(N)
         ops["phi"] = self.phi_zpf()*(ops["a"] + ops["a_dag"])  
+        ops["n"] = 1j * self.n_zpf() * (ops["a_dag"] - ops["a"])
+
         return ops
 
     def phi_zpf(self):
         """Return Phase ZPF."""
         return (2*self.params["Ec"]/self.params["El"])**(.25)
+    
+    def n_zpf(self):
+        n_zpf = (self.params["El"] / (32.0 * self.params["Ec"])) ** (0.25)
+        return n_zpf
     
     def get_linear_ω(self):
         """Get frequency of linear terms."""
