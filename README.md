@@ -13,7 +13,17 @@ Built on JAX,  `qcsys` presents a scalable way to assemble and simulate systems 
 
 ## Installation
 
-`qcsys` is published on PyPI. Simply run the following code to install the package:
+**Recommended:** As this is a rapidly evolving project, we recommend installing the latest version of `qcsys` from source: 
+```
+pip install git+https://github.com/EQuS/qcsys.git
+```
+
+After installing `qcsys`, consider updating the `jaxquantum` dependency to its latest version from source:
+```
+pip install git+https://github.com/EQuS/jaxquantum.git
+```
+
+`qcsys` is also published on PyPI. Simply run the following code to install the package:
 
 
 ```bash

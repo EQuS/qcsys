@@ -9,7 +9,7 @@ from setuptools import setup, find_namespace_packages
 DIST_NAME = "qcsys"
 PACKAGE_NAME = "qcsys"
 
-REQUIREMENTS = ["numpy", "matplotlib", "qutip", "jax[cpu]", "flax"]
+REQUIREMENTS = ["numpy", "matplotlib", "qutip", "jax[cpu]", "flax", "jaxquantum"]
 
 EXTRA_REQUIREMENTS = {
     "dev": [
