@@ -1,4 +1,5 @@
 """ Kerr Nonlinear Oscillator """
+
 from flax import struct
 from jax import config
 import jaxquantum as jqt
@@ -14,10 +15,6 @@ class KNO(Device):
     """
     Kerr Nonlinear Oscillator Device.
     """
-
-    @classmethod
-    def create(cls, N, params, label=0, use_linear=False):
-        return cls(N, params, label, use_linear)
 
     def common_ops(self):
         ops = {}

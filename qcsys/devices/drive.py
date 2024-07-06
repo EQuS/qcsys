@@ -7,6 +7,7 @@ from flax import struct
 from jax import tree_util, jit, Array
 from jax import config
 import jax.numpy as jnp
+import jaxquantum as jqt
 
 config.update("jax_enable_x64", True)
 
@@ -37,14 +38,14 @@ class Drive(ABC):
         M_max = self.M_max
 
         # Construct M = ∑ₘ m|m><m| operator in drive charge basis
-        ops["M"] = jnp.diag(jnp.arange(-M_max, M_max + 1))
+        ops["M"] = jqt.Qarray.create(jnp.diag(jnp.arange(-M_max, M_max + 1)))
 
         # Construct Id = ∑ₘ|m><m| in the drive charge basis
-        ops["Id_drive"] = jnp.identity(2 * M_max + 1)
+        ops["id"] = jqt.Qarray.create(jnp.identity(2 * M_max + 1))
 
         # Construct M₊ ≡ exp(iθ) and M₋ ≡ exp(-iθ) operators for drive
-        ops["M-"] = jnp.eye(2 * M_max + 1, k=1)
-        ops["M+"] = jnp.eye(2 * M_max + 1, k=-1)
+        ops["M-"] = jqt.Qarray.create(jnp.eye(2 * M_max + 1, k=1))
+        ops["M+"] = jqt.Qarray.create(jnp.eye(2 * M_max + 1, k=-1))
 
         # Construct cos(θ) ≡ 1/2 * [M₊ + M₋] = 1/2 * ∑ₘ|m+1><m| + h.c
         ops["cos(θ)"] = 0.5 * (ops["M+"] + ops["M-"])
@@ -54,8 +55,8 @@ class Drive(ABC):
 
         # Construct more general drive operators cos(kθ) and sin(kθ)
         for k in range(2, M_max + 1):
-            ops[f"M_+{k}"] = jnp.eye(2 * M_max + 1, k=-k)
-            ops[f"M_-{k}"] = jnp.eye(2 * M_max + 1, k=k)
+            ops[f"M_+{k}"] = jqt.Qarray.create(jnp.eye(2 * M_max + 1, k=-k))
+            ops[f"M_-{k}"] = jqt.Qarray.create(jnp.eye(2 * M_max + 1, k=k))
             ops[f"cos({k}θ)"] = 0.5 * (ops[f"M_+{k}"] + ops[f"M_-{k}"])
             ops[f"sin({k}θ)"] = -0.5j * (ops[f"M_+{k}"] - ops[f"M_-{k}"])
 
