@@ -32,7 +32,7 @@ class Drive(ABC):
     def ops(self):
         return self.common_ops()
 
-    def common_ops(self) -> Dict[str, Array]:
+    def common_ops(self) -> Dict[str, jqt.Qarray]:
         ops = {}
 
         M_max = self.M_max
