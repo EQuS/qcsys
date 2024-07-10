@@ -6,6 +6,7 @@ import os
 
 from .common import *
 from .devices import *
+from .analysis import *
 
 with open(
     os.path.abspath(os.path.join(os.path.dirname(__file__), "VERSION.txt")), "r"

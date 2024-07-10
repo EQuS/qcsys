@@ -78,13 +78,27 @@ class Device(ABC):
         pass
 
     @classmethod
-    def create(cls, N, params, label=0, use_linear=None, N_pre_diag=None, hamiltonian: HamiltonianTypes = None, basis: BasisTypes = None):
+    def create(cls, N, params, label=0, N_pre_diag=None,use_linear=False, hamiltonian: HamiltonianTypes = None, basis: BasisTypes = None):
+        """Create a device.
+
+        Args:
+            N (int): dimension of Hilbert space.
+            params (dict): parameters of the device.
+            label (int, optional): label for the device. Defaults to 0. This is useful when you have multiple of the same device type in the same system.
+            N_pre_diag (int, optional): dimension of Hilbert space before diagonalization. Defaults to None, in which case it is set to N. This must be greater than or rqual to N.
+            use_linear (bool): whether to use the linearized device. Defaults to False. This will override the hamiltonian keyword argument. This is a bit redundant with hamiltonian, but it is kept for backwards compatibility.
+            hamiltonian (HamiltonianTypes, optional): type of Hamiltonian. Defaults to None, in which case the full hamiltonian is used.
+            basis (BasisTypes, optional): type of basis. Defaults to None, in which case the fock basis is used.
+        """
+        
         if N_pre_diag is None:
             N_pre_diag = N
 
+        assert N_pre_diag >= N, "N_pre_diag must be greater than or equal to N."
+
         _basis = basis if basis is not None else BasisTypes.fock
         _hamiltonian = hamiltonian if hamiltonian is not None else HamiltonianTypes.full
-        if use_linear is not None and use_linear:
+        if use_linear:
             _hamiltonian = HamiltonianTypes.linear
         
         cls.param_validation(N, N_pre_diag, params, _hamiltonian, _basis)
