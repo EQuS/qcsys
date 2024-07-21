@@ -62,6 +62,11 @@ class System:
         couplings: Optional[List[Array]] = None,
         params: Optional[Dict[str, Any]] = None,
     ):
+        labels = [device.label for device in devices]
+        unique_labels = set(labels)
+        if len(labels) != len(unique_labels):
+            raise ValueError("Devices must have unique labels.")
+            
         Ns = tuple([device.N for device in devices])
         couplings = couplings if couplings is not None else []
         params = params if params is not None else {}
