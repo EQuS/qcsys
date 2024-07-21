@@ -24,6 +24,7 @@ class ATS(FluxDevice):
         ops["a"] = jqt.destroy(N)
         ops["a_dag"] = jqt.create(N)
         ops["phi"] = self.phi_zpf()*(ops["a"] + ops["a_dag"])  
+        ops["n"] = 1j * self.n_zpf() * (ops["a_dag"] - ops["a"])
         return ops
 
     def phi_zpf(self):

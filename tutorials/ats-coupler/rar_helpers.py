@@ -255,3 +255,28 @@ def get_system_normal_rar(params):
     system.params["phi_c"] = phi_c
     system.params["phi_c_alternative"] = phi_c_alternative
     return system, ϕ0, metrics0, system0
+
+@jit
+def get_metrics_normal_rar(params):
+    """set up devices"""
+    system, ϕ0, metrics0, system0 = get_system_normal_rar(params)
+    a_indx = 2
+    c_indx = 1
+    b_indx = 0
+
+    epsilon_p = params.get("ATS__drive_strength", DRIVE_STRENGTH)
+
+    resonator_a = system.devices[a_indx]
+    ats = system.devices[c_indx]
+    resonator_b = system.devices[b_indx]
+
+    Es, kets = system.calculate_eig()
+
+    n_ats = 0
+    K_a = (Es[2:, n_ats, 0] - Es[1:-1, n_ats, 0]) - (
+        Es[1:-1, n_ats, 0] - Es[0:-2, n_ats, 0]
+    )
+    metrics = {}
+    metrics["K_a"] = K_a
+
+    return metrics, system, ϕ0, metrics0, system0
