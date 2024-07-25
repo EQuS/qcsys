@@ -55,8 +55,8 @@ def create_devices_linear_rar(params):
     Ej_c = params.get("ATS__E_J", 37.0)
     dEj_c = params.get("ATS__dE_J", 0.0)
     Ej2_c = params.get("ATS__E_J_2", 0.0)
-    phi_sum_c = params.get("ATS__phi_sum", 0.25)
-    phi_delta_c = params.get("ATS__phi_sum", 0.0)
+    phi_sum_c = params.get("ATS__phi_sum_ext", 0.25)
+    phi_delta_c = params.get("ATS__phi_delta_ext", 0.25)
 
     ats = qs.ATS.create(
         N_CONS["ats"]["bare"],
@@ -143,6 +143,8 @@ def get_metrics_linear_rar(params):
 
     drive_strength = params.get("ATS__drive_strength", DRIVE_STRENGTH)
     metrics[f"g_ex"] = ϕ["ATS"]["ResonatorA"] * ϕ["ATS"]["ResonatorB"] * drive_strength * ats.params["Ej"]
+    metrics[f"g_3"] = (1/2) * ϕ["ATS"]["ResonatorA"]**2 * ϕ["ATS"]["ResonatorB"] * drive_strength * ats.params["Ej"]
+    metrics[f"g_cd"] = ϕ["ATS"]["ResonatorA"]**2 * ϕ["ATS"]["ResonatorB"] * drive_strength * ats.params["Ej"]
     return ϕ, metrics, system
 
 
