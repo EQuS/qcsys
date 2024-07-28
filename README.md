@@ -13,15 +13,32 @@ Built on JAX,  `qcsys` presents a scalable way to assemble and simulate systems 
 
 ## Installation
 
-**Recommended:** As this is a rapidly evolving project, we recommend installing the latest version of `qcsys` from source: 
+### Installing from source (recommended)
+
+**Recommended:** As this is a rapidly evolving project, we recommend installing the latest version of `qcsys` from source as follows:
 ```
 pip install git+https://github.com/EQuS/qcsys.git
 ```
 
-After installing `qcsys`, consider updating the `jaxquantum` dependency to its latest version from source:
+After installing `qcsys`, update the `jaxquantum` dependency to its latest version from source:
 ```
 pip install git+https://github.com/EQuS/jaxquantum.git
 ```
+
+### Installing from source in editable mode (recommended for developers)
+
+If you are interested in contributing to the package, please clone this repository and install this package in editable mode after changing into the root directory of this repository:
+```
+pip install -e ".[dev]"
+```
+This will also install extras from the `dev` flag, which can be useful when developing the package. Since this is installed in editable mode, the package will automatically be updated after pulling new changes in the repository. 
+
+After installing `qcsys`, update the `jaxquantum` dependency to its latest version from source:
+```
+pip install git+https://github.com/EQuS/jaxquantum.git
+```
+
+### Installing from PyPI (not recommended)
 
 `qcsys` is also published on PyPI. Simply run the following code to install the package:
 
