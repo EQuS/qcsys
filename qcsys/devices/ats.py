@@ -69,7 +69,7 @@ class ATS(FluxDevice):
     def potential(self, phi):
         """Return potential energy for a given phi."""
 
-        phi_delta_ext = self.params["phi_delta"]
+        phi_delta_ext = self.params["phi_delta_ext"]
         phi_sum_ext = self.params["phi_sum_ext"]
 
         V = 0.5 * self.params["El"] * (2 * jnp.pi * phi) ** 2
