@@ -5,7 +5,6 @@ from jax import config
 import jaxquantum as jqt
 import jax.numpy as jnp
 import jax.scipy as jsp
-from jax import jit
 
 from qcsys.devices.base import BasisTypes, FluxDevice, HamiltonianTypes
 

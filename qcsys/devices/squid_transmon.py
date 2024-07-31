@@ -9,7 +9,6 @@ from jax import config
 import jaxquantum as jqt
 import jax.numpy as jnp
 import jax.scipy as jsp
-from jax import jit
 
 from qcsys.devices.base import Device
 
@@ -125,7 +124,6 @@ class SymmetricSQUIDTransmon(Device):
             - 2 * self.params["Ej"] * jnp.cos(phi_ext / 2) * self.linear_ops["cos(φ)"]
         )
 
-    @jit
     def get_op_in_H_eigenbasis(self, op):
         """
         We overwrite this function to effectively truncate to the first N levels out of N_max_charge

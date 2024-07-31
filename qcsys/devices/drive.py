@@ -4,7 +4,7 @@ from abc import abstractmethod, ABC
 from typing import Dict, Any
 
 from flax import struct
-from jax import tree_util, jit, Array
+from jax import tree_util, Array
 from jax import config
 import jax.numpy as jnp
 

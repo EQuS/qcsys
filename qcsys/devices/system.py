@@ -5,7 +5,7 @@ from typing import List, Optional, Dict, Any, Union
 import math
 
 from flax import struct
-from jax import jit, vmap, Array
+from jax import vmap, Array
 from jax import config
 import jaxquantum as jqt
 import jax.numpy as jnp
@@ -16,7 +16,6 @@ from qcsys.devices.drive import Drive
 config.update("jax_enable_x64", True)
 
 
-@partial(jit, static_argnums=(0,))
 def calculate_eig(Ns, H: jqt.Qarray):
     N_tot = math.prod(Ns)
     edxs = jnp.arange(N_tot)
