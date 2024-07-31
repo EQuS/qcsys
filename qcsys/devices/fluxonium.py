@@ -54,16 +54,20 @@ class Fluxonium(FluxDevice):
 
     def get_H_full(self):
         """Return full H in linear basis."""
-        op_cos_phi = jqt.cosm(self.linear_ops["phi"])
-        op_sin_phi = jqt.sinm(self.linear_ops["phi"])
+        
+        phi_op = self.linear_ops["phi"]
+        return self.get_H_linear() + self.get_H_nonlinear(phi_op)
+
+    def get_H_nonlinear(self, phi_op):
+        op_cos_phi = jqt.cosm(phi_op)
+        op_sin_phi = jqt.sinm(phi_op)
 
         phi_ext = self.params["phi_ext"]
         Hcos = op_cos_phi * jnp.cos(2.0 * jnp.pi * phi_ext) + op_sin_phi * jnp.sin(
             2.0 * jnp.pi * phi_ext
         )
-
-        H = self.get_H_linear() - self.params["Ej"] * Hcos
-        return H
+        H_nl = - self.params["Ej"] * Hcos
+        return H_nl
 
     def potential(self, phi):
         """Return potential energy for a given phi."""

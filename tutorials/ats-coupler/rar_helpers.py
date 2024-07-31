@@ -249,8 +249,8 @@ def get_system_normal_rar(params):
 
     couplings = []
     coupling_term = 0 
-    coupling_term += ats.get_H_nonlinear(phi, id_op_c)
-    coupling_term -= ats.get_H_nonlinear(phi_c, id_op_c)
+    coupling_term += ats.get_H_nonlinear(phi)
+    coupling_term -= ats.get_H_nonlinear(phi_c)
     couplings.append(coupling_term)
 
     system = qs.System.create(devices, couplings=couplings)

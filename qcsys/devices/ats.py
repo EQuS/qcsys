@@ -45,24 +45,51 @@ class ATS(FluxDevice):
         return w*(self.linear_ops["a_dag"]@self.linear_ops["a"] + 0.5 * self.linear_ops["id"])
 
 
-    def get_H_nonlinear(self, phi_op, id_op):
+    def get_H_nonlinear(self, phi_op):
         """Return nonlinear terms in H."""
 
         Ej = self.params["Ej"]
         dEj = self.params["dEj"]
         Ej2 = self.params["Ej2"]
+
+        phi_sum = self.params["phi_sum_ext"]
+        phi_delta = self.params["phi_delta_ext"]
+
+        cos_phi_op = jqt.cosm(phi_op)
+        sin_phi_op = jqt.sinm(phi_op)
+
+        cos_2phi_op = cos_phi_op @ cos_phi_op - sin_phi_op @ sin_phi_op
+        sin_2phi_op = 2 * cos_phi_op @ sin_phi_op
+
+        H_nl_Ej = - 2 * Ej * (
+            cos_phi_op * jnp.cos(2 * jnp.pi * phi_delta) 
+            - sin_phi_op * jnp.sin(2 * jnp.pi * phi_delta)
+        ) * jnp.cos(2 * jnp.pi * phi_sum)
+        H_nl_dEj = 2 * dEj * (
+            sin_phi_op * jnp.cos(2 * jnp.pi * phi_delta)
+            + cos_phi_op * jnp.sin(2 * jnp.pi * phi_delta)
+        ) * jnp.sin(2 * jnp.pi * phi_sum) 
+        H_nl_Ej2 = 2 * Ej2 * (
+            cos_2phi_op * jnp.cos(2 * 2 * jnp.pi * phi_delta)
+            - sin_2phi_op * jnp.sin(2 * 2 * jnp.pi * phi_delta)
+        ) * jnp.cos(2 * 2 * jnp.pi * phi_sum)
         
-        phi_delta_ext_op = self.params["phi_delta_ext"] * id_op
-        H_nl = - 2 * Ej * jqt.cosm(phi_op + 2 * jnp.pi * phi_delta_ext_op) * jnp.cos(2 * jnp.pi * self.params["phi_sum_ext"])
-        H_nl += 2 * dEj * jqt.sinm(phi_op + 2 * jnp.pi * phi_delta_ext_op) * jnp.sin(2 * jnp.pi * self.params["phi_sum_ext"]) 
-        H_nl += 2 * Ej2 * jqt.cosm(2*phi_op + 2 * 2 * jnp.pi * phi_delta_ext_op) * jnp.cos(2 * 2 * jnp.pi * self.params["phi_sum_ext"])
+        H_nl = H_nl_Ej + H_nl_dEj + H_nl_Ej2
+
+
+        # id_op = jqt.identity_like(phi_op)
+        # phi_delta_ext_op = self.params["phi_delta_ext"] * id_op
+        # H_nl_old = - 2 * Ej * jqt.cosm(phi_op + 2 * jnp.pi * phi_delta_ext_op) * jnp.cos(2 * jnp.pi * self.params["phi_sum_ext"])
+        # H_nl_old += 2 * dEj * jqt.sinm(phi_op + 2 * jnp.pi * phi_delta_ext_op) * jnp.sin(2 * jnp.pi * self.params["phi_sum_ext"]) 
+        # H_nl_old += 2 * Ej2 * jqt.cosm(2*phi_op + 2 * 2 * jnp.pi * phi_delta_ext_op) * jnp.cos(2 * 2 * jnp.pi * self.params["phi_sum_ext"])
+        
         return H_nl
 
     def get_H_full(self):
         """Return full H in linear basis."""
         id_op = self.linear_ops["id"]
         phi_b = self.linear_ops["phi"]
-        H_nl = self.get_H_nonlinear(phi_b, id_op)
+        H_nl = self.get_H_nonlinear(phi_b)
         H = self.get_H_linear() + H_nl
         return H
 
