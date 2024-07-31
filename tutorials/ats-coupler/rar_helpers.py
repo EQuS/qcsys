@@ -256,6 +256,7 @@ def get_system_normal_rar(params):
     system = qs.System.create(devices, couplings=couplings)
     system.params["phi_c"] = phi_c
     system.params["phi_c_alternative"] = phi_c_alternative
+    system.params["phi"] = phi
     return system, ϕ0, metrics0, system0
 
 @jit
