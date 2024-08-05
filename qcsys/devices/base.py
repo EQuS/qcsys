@@ -19,6 +19,7 @@ config.update("jax_enable_x64", True)
 class BasisTypes(str, Enum):
     fock = "fock"
     charge = "charge"
+    single_charge = "single_charge"
 
     @classmethod
     def from_str(cls, string: str):
@@ -43,6 +44,7 @@ class HamiltonianTypes(str, Enum):
     linear = "linear"
     truncated = "truncated"
     full = "full"
+    single_charge = "single_charge"
 
     @classmethod
     def from_str(cls, string: str):
