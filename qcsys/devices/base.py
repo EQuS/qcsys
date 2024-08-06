@@ -44,7 +44,6 @@ class HamiltonianTypes(str, Enum):
     linear = "linear"
     truncated = "truncated"
     full = "full"
-    single_charge = "single_charge"
 
     @classmethod
     def from_str(cls, string: str):
