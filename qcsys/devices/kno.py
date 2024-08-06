@@ -5,7 +5,7 @@ from jax import config
 import jaxquantum as jqt
 import jax.numpy as jnp
 
-from qcsys.devices.base import Device
+from qcsys.devices.base import Device, BasisTypes, HamiltonianTypes
 
 config.update("jax_enable_x64", True)
 
@@ -16,6 +16,13 @@ class KNO(Device):
     Kerr Nonlinear Oscillator Device.
     """
 
+    @classmethod
+    def param_validation(cls, N, N_pre_diag, params, hamiltonian, basis):
+        """ This can be overridden by subclasses."""
+        assert basis == BasisTypes.fock, "Kerr Nonlinear Oscillator must be defined in the Fock basis." 
+        assert hamiltonian == HamiltonianTypes.full, "Kerr Nonlinear Oscillator uses a full Hamiltonian."
+        assert "ω" in params and "α" in params, "Kerr Nonlinear Oscillator requires frequency 'ω' and anharmonicity 'α' as parameters."
+        
     def common_ops(self):
         ops = {}
 
