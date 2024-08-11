@@ -2,7 +2,6 @@
 
 import qcsys as qs 
 import jax.numpy as jnp
-from jax import jit
 import jaxquantum as jqt
 
 N_CONS = {
@@ -107,7 +106,7 @@ def create_system_linear_rar(params):
 
     return system
 
-@jit 
+
 def get_metrics_linear_rar(params):
     system = create_system_linear_rar(params)
     resonator_a = system.devices[0]
@@ -148,7 +147,7 @@ def get_metrics_linear_rar(params):
     return ϕ, metrics, system
 
 
-@jit 
+
 def get_devices_normal_rar(params):
     """set up devices"""
     ϕ0, metrics0, system0 = get_metrics_linear_rar(params)
@@ -215,7 +214,7 @@ def get_devices_normal_rar(params):
     return resonator_a, ats, resonator_b, ϕ0, metrics0, system0 
 
 
-@jit
+
 def get_system_normal_rar(params):
     """set up devices"""
     resonator_a, ats, resonator_b, ϕ0, metrics0, system0  = get_devices_normal_rar(params)
@@ -259,7 +258,7 @@ def get_system_normal_rar(params):
     system.params["phi"] = phi
     return system, ϕ0, metrics0, system0
 
-@jit
+
 def get_metrics_normal_rar(params):
     """set up devices"""
     system, ϕ0, metrics0, system0 = get_system_normal_rar(params)
@@ -279,7 +278,12 @@ def get_metrics_normal_rar(params):
     K_a = (Es[2:, n_ats, 0] - Es[1:-1, n_ats, 0]) - (
         Es[1:-1, n_ats, 0] - Es[0:-2, n_ats, 0]
     )
+    K_b = (Es[0, n_ats, 2:] - Es[0, n_ats, 1:-1]) - (
+        Es[0, n_ats, 1:-1] - Es[0, n_ats, 0:-2]
+    )
+
     metrics = {}
     metrics["K_a"] = K_a
+    metrics["K_b"] = K_b
 
     return metrics, system, ϕ0, metrics0, system0
