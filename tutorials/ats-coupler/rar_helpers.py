@@ -87,18 +87,18 @@ def create_system_linear_rar(params):
     devices = [resonator_a, ats, resonator_b]
     Ns = [device.N for device in devices]
 
-    a0 = qs.promote(resonator_a.ops["a"], 0, Ns)
-    a0_dag = qs.promote(resonator_a.ops["a_dag"], 0, Ns)
+    a = qs.promote(resonator_a.ops["a"], 0, Ns)
+    a_dag = qs.promote(resonator_a.ops["a_dag"], 0, Ns)
 
-    c0 = qs.promote(ats.ops["a"], 1, Ns)
-    c0_dag = qs.promote(ats.ops["a_dag"], 1, Ns)
+    c = qs.promote(ats.ops["a"], 1, Ns)
+    c_dag = qs.promote(ats.ops["a_dag"], 1, Ns)
 
-    b0 = qs.promote(resonator_b.ops["a"], 2, Ns)
-    b0_dag = qs.promote(resonator_b.ops["a_dag"], 2, Ns)
+    b = qs.promote(resonator_b.ops["a"], 2, Ns)
+    b_dag = qs.promote(resonator_b.ops["a_dag"], 2, Ns)
 
     couplings = []
-    couplings.append(-g_ac * (a0 - a0_dag) @ (c0 - c0_dag))
-    couplings.append(-g_cb * (c0 - c0_dag) @ (b0 - b0_dag))
+    couplings.append(-g_ac * (a - a_dag) @ (c - c_dag))
+    couplings.append(-g_cb * (c - c_dag) @ (b - b_dag))
 
     system = qs.System.create(devices, couplings=couplings)
     system.params["g_ac"] = g_ac
@@ -153,9 +153,9 @@ def get_devices_normal_rar(params):
     ϕ0, metrics0, system0 = get_metrics_linear_rar(params)
 
     # units are GHz and ns
-    ω_a0 = metrics0["ω_ResonatorA"]
-    ω_c0 = metrics0["ω_ATS"]
-    ω_b0 = metrics0["ω_ResonatorB"]
+    ω_a = metrics0["ω_ResonatorA"]
+    ω_c = metrics0["ω_ATS"]
+    ω_b = metrics0["ω_ResonatorB"]
 
     ϕa_zpf = ϕ0["ResonatorA"]["ResonatorA"]
     ϕc_zpf = ϕ0["ATS"]["ATS"]
@@ -166,9 +166,9 @@ def get_devices_normal_rar(params):
     Ec_over_El_c = ϕc_zpf**4 / 2
     Ec_over_El_b = ϕb_zpf**4 / 2
 
-    Ec_a = jnp.sqrt(ω_a0**2 / 8 * Ec_over_El_a)
-    Ec_c = jnp.sqrt(ω_c0**2 / 8 * Ec_over_El_c)
-    Ec_b = jnp.sqrt(ω_b0**2 / 8 * Ec_over_El_b)
+    Ec_a = jnp.sqrt(ω_a**2 / 8 * Ec_over_El_a)
+    Ec_c = jnp.sqrt(ω_c**2 / 8 * Ec_over_El_c)
+    Ec_b = jnp.sqrt(ω_b**2 / 8 * Ec_over_El_b)
 
     resonator_a = qs.Resonator.create(
         N_CONS["resonator_a"]["truncated"],
@@ -227,20 +227,20 @@ def get_system_normal_rar(params):
     Ns = [device.N for device in devices]
 
 
-    a0 = qs.promote(resonator_a.ops["a"], a_indx, Ns)
-    a0_dag = qs.promote(resonator_a.ops["a_dag"], a_indx, Ns)
-    phi_a = ϕ0["ATS"]["ResonatorA"] * (a0 + a0_dag)
+    a = qs.promote(resonator_a.ops["a"], a_indx, Ns)
+    a_dag = qs.promote(resonator_a.ops["a_dag"], a_indx, Ns)
+    phi_a = ϕ0["ATS"]["ResonatorA"] * (a + a_dag)
 
-    b0 = qs.promote(resonator_b.ops["a"], b_indx, Ns)
-    b0_dag = qs.promote(resonator_b.ops["a_dag"], b_indx, Ns)
-    phi_b = ϕ0["ATS"]["ResonatorB"] * (b0 + b0_dag)
+    b = qs.promote(resonator_b.ops["a"], b_indx, Ns)
+    b_dag = qs.promote(resonator_b.ops["a_dag"], b_indx, Ns)
+    phi_b = ϕ0["ATS"]["ResonatorB"] * (b + b_dag)
 
-    c0 = qs.promote(ats.ops["a"], c_indx, Ns)
-    c0_dag = qs.promote(ats.ops["a_dag"], c_indx, Ns)
+    c = qs.promote(ats.ops["a"], c_indx, Ns)
+    c_dag = qs.promote(ats.ops["a_dag"], c_indx, Ns)
     phi_c = qs.promote(ats.ops["phi"], c_indx, Ns)
 
     # sanity check
-    phi_c_alternative = ϕ0["ATS"]["ATS"] * (c0 + c0_dag)
+    phi_c_alternative = ϕ0["ATS"]["ATS"] * (c + c_dag)
     # assert jnp.abs(phi_c- phi_c_alternative).max() < 1e-10
 
     phi = phi_a + phi_c + phi_b
@@ -256,6 +256,9 @@ def get_system_normal_rar(params):
     system.params["phi_c"] = phi_c
     system.params["phi_c_alternative"] = phi_c_alternative
     system.params["phi"] = phi
+    system.params["a"] = a 
+    system.params["b"] = b
+    system.params["c"] = c
     return system, ϕ0, metrics0, system0
 
 
