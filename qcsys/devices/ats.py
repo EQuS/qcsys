@@ -44,17 +44,8 @@ class ATS(FluxDevice):
         w = self.get_linear_ω()
         return w*(self.linear_ops["a_dag"]@self.linear_ops["a"] + 0.5 * self.linear_ops["id"])
 
-
-    def get_H_nonlinear(self, phi_op):
-        """Return nonlinear terms in H."""
-
-        Ej = self.params["Ej"]
-        dEj = self.params["dEj"]
-        Ej2 = self.params["Ej2"]
-
-        phi_sum = self.params["phi_sum_ext"]
-        phi_delta = self.params["phi_delta_ext"]
-
+    @staticmethod
+    def get_H_nonlinear_static(phi_op, Ej, dEj, Ej2, phi_sum, phi_delta):
         cos_phi_op = jqt.cosm(phi_op)
         sin_phi_op = jqt.sinm(phi_op)
 
@@ -84,6 +75,26 @@ class ATS(FluxDevice):
         # H_nl_old += 2 * Ej2 * jqt.cosm(2*phi_op + 2 * 2 * jnp.pi * phi_delta_ext_op) * jnp.cos(2 * 2 * jnp.pi * self.params["phi_sum_ext"])
         
         return H_nl
+
+    def get_H_nonlinear(self, phi_op):
+        """Return nonlinear terms in H."""
+
+        Ej = self.params["Ej"]
+        dEj = self.params["dEj"]
+        Ej2 = self.params["Ej2"]
+
+        phi_sum = self.params["phi_sum_ext"]
+        phi_delta = self.params["phi_delta_ext"]
+
+        return ATS.get_H_nonlinear_static(
+            phi_op, 
+            Ej, 
+            dEj, 
+            Ej2, 
+            phi_sum, 
+            phi_delta
+        )
+        
 
     def get_H_full(self):
         """Return full H in linear basis."""
