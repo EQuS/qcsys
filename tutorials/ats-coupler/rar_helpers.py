@@ -288,5 +288,6 @@ def get_metrics_normal_rar(params):
     metrics = {}
     metrics["K_a"] = K_a
     metrics["K_b"] = K_b
+    metrics["E"] = Es
 
     return metrics, system, ϕ0, metrics0, system0
