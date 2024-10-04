@@ -81,8 +81,8 @@ def create_system_linear_rar(params):
     J_ac = params.get("ResonatorA_ATS__J", 0.1)
     J_cb = params.get("ATS_ResonatorB__J", 0.1)
 
-    g_ac = J_ac * resonator_a.n_zpf() * ats.phi_zpf()
-    g_cb = J_cb * ats.n_zpf() * resonator_b.phi_zpf()
+    g_ac = J_ac * resonator_a.n_zpf() * ats.n_zpf()
+    g_cb = J_cb * ats.n_zpf() * resonator_b.n_zpf()
 
     devices = [resonator_a, ats, resonator_b]
     Ns = [device.N for device in devices]
