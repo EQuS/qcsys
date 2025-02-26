@@ -9,7 +9,7 @@ import os
 
 
 
-def run_sweep(params, sweep_params, metrics_func, fixed_kwargs=None, data=None, is_parallel=False, save_file=None, data_save_mode="end"):
+def run_sweep(params, sweep_params, metrics_func, fixed_kwargs=None, data=None, is_parallel=False, save_file=None, data_save_mode="end", return_errors=False):
     """ Run a sweep over a single parameter, or multiple parameters.
 
     Args:
@@ -55,37 +55,9 @@ def run_sweep(params, sweep_params, metrics_func, fixed_kwargs=None, data=None, 
         sweep_length = len(list(sweep_params.values())[0])
         assert [len(vals) == sweep_length for vals in sweep_params.values()], "Parallel sweep parameters must have the same length."
 
-        for j in tqdm(range(sweep_length)):
-            run += 1
-            data[run] = {}
-            data[run]["params"] = deepcopy(params)
-            sweep_point_info = {
-                "labels": [],
-                "values": [],
-                "indices": [],
-            }
-            for key, vals in sweep_params.items():
-                data[run]["params"][key] = vals[j]
-                sweep_point_info["labels"].append(key)
-                sweep_point_info["values"].append(vals[j])
-                sweep_point_info["indices"].append(j)
-            data[run]["results"] = metrics_func(data[run]["params"], **fixed_kwargs)
-            data[run]["sweep_point_info"] = sweep_point_info
-            if data_save_mode == "during":
-                jnp.savez(save_file, data=data, sweep_params=sweep_params, params=params)
-        
-        if data_save_mode in ["during", "end"]:
-            jnp.savez(save_file, data=data, sweep_params=sweep_params, params=params)
-
-        return data
-    else:
-        # Product Sweep
-        sweep_points = list(itertools.product(*list(sweep_params.values())))
-        sweep_points_indxs = list(itertools.product(*[list(range(len(vals))) for vals in list(sweep_params.values())]))
-        sweep_point_labels = list(sweep_params.keys())
-
-        with tqdm(total=len(sweep_points)) as pbar:
-            for j, sweep_point in enumerate(sweep_points):
+        errors = []
+        try:
+            for j in tqdm(range(sweep_length)):
                 run += 1
                 data[run] = {}
                 data[run]["params"] = deepcopy(params)
@@ -94,16 +66,71 @@ def run_sweep(params, sweep_params, metrics_func, fixed_kwargs=None, data=None, 
                     "values": [],
                     "indices": [],
                 }
-                for i, key in enumerate(sweep_point_labels):
-                    data[run]["params"][key] = sweep_point[i]
+                for key, vals in sweep_params.items():
+                    data[run]["params"][key] = vals[j]
                     sweep_point_info["labels"].append(key)
-                    sweep_point_info["values"].append(sweep_point[i])
-                    sweep_point_info["indices"].append(sweep_points_indxs[j][i])
+                    sweep_point_info["values"].append(vals[j])
+                    sweep_point_info["indices"].append(j)
                 data[run]["results"] = metrics_func(data[run]["params"], **fixed_kwargs)
                 data[run]["sweep_point_info"] = sweep_point_info
-                pbar.update(1)
                 if data_save_mode == "during":
                     jnp.savez(save_file, data=data, sweep_params=sweep_params, params=params)
-        if data_save_mode in ["during", "end"]:
-            jnp.savez(save_file, data=data, sweep_params=sweep_params, params=params)
-        return data
+        except Exception as e:
+            errors.append(str(e))
+            print("Error during run: ", errors[-1])
+        
+        try:
+            if data_save_mode in ["during", "end"]:
+                jnp.savez(save_file, data=data, sweep_params=sweep_params, params=params, error=None)
+        except Exception as e:
+            errors.append(str(e))
+            print("Error during saving: ", errors[-1])
+
+        if return_errors:
+            return data, errors
+        else:
+            return data
+    else:
+        # Product Sweep
+        sweep_points = list(itertools.product(*list(sweep_params.values())))
+        sweep_points_indxs = list(itertools.product(*[list(range(len(vals))) for vals in list(sweep_params.values())]))
+        sweep_point_labels = list(sweep_params.keys())
+
+        errors = []
+
+        try:
+            with tqdm(total=len(sweep_points)) as pbar:
+                for j, sweep_point in enumerate(sweep_points):
+                    run += 1
+                    data[run] = {}
+                    data[run]["params"] = deepcopy(params)
+                    sweep_point_info = {
+                        "labels": [],
+                        "values": [],
+                        "indices": [],
+                    }
+                    for i, key in enumerate(sweep_point_labels):
+                        data[run]["params"][key] = sweep_point[i]
+                        sweep_point_info["labels"].append(key)
+                        sweep_point_info["values"].append(sweep_point[i])
+                        sweep_point_info["indices"].append(sweep_points_indxs[j][i])
+                    data[run]["results"] = metrics_func(data[run]["params"], **fixed_kwargs)
+                    data[run]["sweep_point_info"] = sweep_point_info
+                    pbar.update(1)
+                    if data_save_mode == "during":
+                        jnp.savez(save_file, data=data, sweep_params=sweep_params, params=params)
+        except Exception as e:
+            errors.append(str(e))
+            print("Error during run: ", errors[-1])
+            
+        try:
+            if data_save_mode in ["during", "end"]:
+                jnp.savez(save_file, data=data, sweep_params=sweep_params, params=params)
+        except Exception as e:
+            errors.append(str(e))
+            print("Error during saving: ", errors[-1])
+
+        if return_errors:
+            return data, errors
+        else:
+            return data
