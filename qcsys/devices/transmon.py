@@ -57,6 +57,8 @@ class Transmon(FluxDevice):
             ops["id"] = jqt.identity(N)
             ops["cos(φ)"] = 0.5*(jqt.jnp2jqt(jnp.eye(N,k=1) + jnp.eye(N,k=-1)))
             ops["sin(φ)"] = 0.5j*(jqt.jnp2jqt(jnp.eye(N,k=1) - jnp.eye(N,k=-1)))
+            ops["cos(2φ)"] = 0.5*(jqt.jnp2jqt(jnp.eye(N,k=2) + jnp.eye(N,k=-2)))
+            ops["sin(2φ)"] = 0.5j*(jqt.jnp2jqt(jnp.eye(N,k=2) - jnp.eye(N,k=-2)))
             n_max = (N - 1) // 2
 
             n_array = jnp.arange(-n_max, n_max + 1)
@@ -91,6 +93,8 @@ class Transmon(FluxDevice):
             ops["id"] = jqt.identity(n_max)
             ops["cos(φ)"] = 0.5*(jqt.jnp2jqt(jnp.eye(n_max,k=1) + jnp.eye(n_max,k=-1)))
             ops["sin(φ)"] = 0.5j*(jqt.jnp2jqt(jnp.eye(n_max,k=1) - jnp.eye(n_max,k=-1)))
+            ops["cos(2φ)"] = 0.5*(jqt.jnp2jqt(jnp.eye(n_max,k=2) + jnp.eye(n_max,k=-2)))
+            ops["sin(2φ)"] = 0.5j*(jqt.jnp2jqt(jnp.eye(n_max,k=2) - jnp.eye(n_max,k=-2)))
 
             n_array = jnp.arange(-n_max, n_max, 2)
             ops["n"] = jqt.jnp2jqt(jnp.diag(n_array))
@@ -103,6 +107,8 @@ class Transmon(FluxDevice):
             ops["id"] = jqt.identity(n_max)
             ops["cos(φ)"] = 0.5*(jqt.jnp2jqt(jnp.eye(n_max,k=1) + jnp.eye(n_max,k=-1)))
             ops["sin(φ)"] = 0.5j*(jqt.jnp2jqt(jnp.eye(n_max,k=1) - jnp.eye(n_max,k=-1)))
+            ops["cos(2φ)"] = 0.5*(jqt.jnp2jqt(jnp.eye(n_max,k=2) + jnp.eye(n_max,k=-2)))
+            ops["sin(2φ)"] = 0.5j*(jqt.jnp2jqt(jnp.eye(n_max,k=2) - jnp.eye(n_max,k=-2)))
 
             n_array = jnp.arange(-n_max + 1, n_max, 2)
             ops["n"] = jqt.jnp2jqt(jnp.diag(n_array))
