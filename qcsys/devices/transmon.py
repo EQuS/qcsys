@@ -177,12 +177,15 @@ class Transmon(FluxDevice):
 
         if self.basis == BasisTypes.fock:
             return super().calculate_wavefunctions(phi_vals)
-        elif self.basis == BasisTypes.single_charge:
+        elif self.basis == BasisTypes.singlecharge:
             raise NotImplementedError("Wavefunctions for single charge basis not yet implemented.")
-        elif self.basis == BasisTypes.charge:
+        elif self.basis in [BasisTypes.charge, BasisTypes.singlecharge_even, BasisTypes.singlecharge_odd]:
             phi_vals = jnp.array(phi_vals)
 
-            n_labels = jnp.diag(self.original_ops["n"].data)
+            if self.basis in [BasisTypes.singlecharge_even, BasisTypes.singlecharge_odd]:
+                n_labels = 1/2 * jnp.diag(self.original_ops["n"].data)
+            else:
+                n_labels = jnp.diag(self.original_ops["n"].data)
 
             wavefunctions = []
             for nj in range(self.N_pre_diag):
