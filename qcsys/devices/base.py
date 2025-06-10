@@ -207,7 +207,8 @@ class Device(ABC):
 
 
 def get_op_in_new_basis(op: jqt.Qarray, evecs: Array, dims: List[List[int]]) -> jqt.Qarray:
-    return jqt.Qarray.create(get_op_data_in_new_basis(op.data, evecs), dims=dims)
+    data = get_op_data_in_new_basis(op.data, evecs)
+    return jqt.Qarray.create(data, dims=dims)
 
 def get_op_data_in_new_basis(op_data: Array, evecs: Array) -> Array:
     return jnp.dot(jnp.conjugate(evecs.transpose()), jnp.dot(op_data, evecs))
