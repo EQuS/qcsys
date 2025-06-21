@@ -36,9 +36,13 @@ def calculate_eig(Ns, H: jqt.Qarray):
 
     Es, kets = vmap(calc_order)(edxs)
 
+    kets = jnp.reshape(kets, (*Ns, -1))
+    kets = jqt.Qarray.create(kets)
+    kets = kets.reshape_qdims(*Ns)
+
     return (
         jnp.reshape(Es, Ns),
-        jnp.reshape(kets, (*Ns, -1)),
+        kets,
     )
 
 
