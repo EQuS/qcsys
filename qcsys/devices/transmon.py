@@ -25,13 +25,16 @@ class Transmon(FluxDevice):
         elif hamiltonian == HamiltonianTypes.truncated:
             assert basis == BasisTypes.fock, "Truncated Hamiltonian only works with Fock basis."
         elif hamiltonian == HamiltonianTypes.full:
-            assert basis in [BasisTypes.charge, BasisTypes.single_charge], "Full Hamiltonian only works with Cooper pair charge or single-electron charge bases."
+            assert basis in [BasisTypes.charge, BasisTypes.singlecharge, BasisTypes.singlecharge_even, BasisTypes.singlecharge_odd], "Full Hamiltonian only works with Cooper pair charge or single-electron charge bases."
         
         # Set the gate offset charge to zero if not provided
         if "ng" not in params:
             params["ng"] = 0.0
         
-        assert (N_pre_diag - 1) % 2 == 0, "N_pre_diag must be odd."
+        if basis in [BasisTypes.singlecharge, BasisTypes.singlecharge_even, BasisTypes.singlecharge_odd]:
+            assert (N_pre_diag) % 2 == 0, "N_pre_diag must be even for single charge bases."
+        else:
+            assert (N_pre_diag - 1) % 2 == 0, "N_pre_diag must be odd."
 
     def common_ops(self):
         """ Written in the specified basis. """
@@ -54,29 +57,62 @@ class Transmon(FluxDevice):
             ops["id"] = jqt.identity(N)
             ops["cos(φ)"] = 0.5*(jqt.jnp2jqt(jnp.eye(N,k=1) + jnp.eye(N,k=-1)))
             ops["sin(φ)"] = 0.5j*(jqt.jnp2jqt(jnp.eye(N,k=1) - jnp.eye(N,k=-1)))
+            ops["cos(2φ)"] = 0.5*(jqt.jnp2jqt(jnp.eye(N,k=2) + jnp.eye(N,k=-2)))
+            ops["sin(2φ)"] = 0.5j*(jqt.jnp2jqt(jnp.eye(N,k=2) - jnp.eye(N,k=-2)))
             n_max = (N - 1) // 2
-            ops["n"] = jqt.jnp2jqt(jnp.diag(jnp.arange(-n_max, n_max + 1)))
 
-            n_minus_ng_array = jnp.arange(-n_max, n_max + 1) - self.params["ng"] * jnp.ones(N)
+            n_array = jnp.arange(-n_max, n_max + 1)
+            ops["n"] = jqt.jnp2jqt(jnp.diag(n_array))
+
+            n_minus_ng_array = n_array - self.params["ng"] * jnp.ones(N)
             ops["H_charge"] = jqt.jnp2jqt(jnp.diag(4 * self.params["Ec"] * n_minus_ng_array**2))
 
-        elif self.basis == BasisTypes.single_charge:
+        elif self.basis == BasisTypes.singlecharge:
             """
             Here H = Ec (n - 2ng)² - Ej cos(φ) in the single-electron charge basis. Using Eq. (5.36) of Kyle Serniak's
             thesis, we have H = Ec ∑ₙ(n - 2*ng) |n⟩⟨n| - Ej/2 * ∑ₙ|n⟩⟨n+2| + h.c where n counts the number of electrons, 
             not Cooper pairs. Note, we use 2ng instead of ng to match the gate offset charge convention of the transmon 
             (as done in Kyle's thesis).
             """
-            n_max = (N - 1) // 2
+            n_max = (N) // 2
 
             ops["id"] = jqt.identity(N)
             ops["cos(φ)"] = 0.5*(jqt.jnp2jqt(jnp.eye(N,k=2) + jnp.eye(N,k=-2)))
             ops["sin(φ)"] = 0.5j*(jqt.jnp2jqt(jnp.eye(N,k=2) - jnp.eye(N,k=-2)))
             ops["cos(φ/2)"] = 0.5*(jqt.jnp2jqt(jnp.eye(N,k=1) + jnp.eye(N,k=-1)))
             ops["sin(φ/2)"] = 0.5j*(jqt.jnp2jqt(jnp.eye(N,k=1) - jnp.eye(N,k=-1)))
-            ops["n"] = jqt.jnp2jqt(jnp.diag(jnp.arange(-n_max, n_max + 1)))
 
-            n_minus_ng_array = jnp.arange(-n_max, n_max + 1) - 2 * self.params["ng"] * jnp.ones(N)
+            n_array = jnp.arange(-n_max, n_max)
+            ops["n"] = jqt.jnp2jqt(jnp.diag(n_array))
+            n_minus_ng_array = n_array - 2 * self.params["ng"] * jnp.ones(N)
+            ops["H_charge"] = jqt.jnp2jqt(jnp.diag(self.params["Ec"] * n_minus_ng_array**2))
+
+        elif self.basis == BasisTypes.singlecharge_even:
+            n_max = N
+
+            ops["id"] = jqt.identity(n_max)
+            ops["cos(φ)"] = 0.5*(jqt.jnp2jqt(jnp.eye(n_max,k=1) + jnp.eye(n_max,k=-1)))
+            ops["sin(φ)"] = 0.5j*(jqt.jnp2jqt(jnp.eye(n_max,k=1) - jnp.eye(n_max,k=-1)))
+            ops["cos(2φ)"] = 0.5*(jqt.jnp2jqt(jnp.eye(n_max,k=2) + jnp.eye(n_max,k=-2)))
+            ops["sin(2φ)"] = 0.5j*(jqt.jnp2jqt(jnp.eye(n_max,k=2) - jnp.eye(n_max,k=-2)))
+
+            n_array = jnp.arange(-n_max, n_max, 2)
+            ops["n"] = jqt.jnp2jqt(jnp.diag(n_array))
+            n_minus_ng_array = n_array - 2 * self.params["ng"] * jnp.ones(n_max)
+            ops["H_charge"] = jqt.jnp2jqt(jnp.diag(self.params["Ec"] * n_minus_ng_array**2))
+
+        elif self.basis == BasisTypes.singlecharge_odd:
+            n_max = N
+
+            ops["id"] = jqt.identity(n_max)
+            ops["cos(φ)"] = 0.5*(jqt.jnp2jqt(jnp.eye(n_max,k=1) + jnp.eye(n_max,k=-1)))
+            ops["sin(φ)"] = 0.5j*(jqt.jnp2jqt(jnp.eye(n_max,k=1) - jnp.eye(n_max,k=-1)))
+            ops["cos(2φ)"] = 0.5*(jqt.jnp2jqt(jnp.eye(n_max,k=2) + jnp.eye(n_max,k=-2)))
+            ops["sin(2φ)"] = 0.5j*(jqt.jnp2jqt(jnp.eye(n_max,k=2) - jnp.eye(n_max,k=-2)))
+
+            n_array = jnp.arange(-n_max + 1, n_max, 2)
+            ops["n"] = jqt.jnp2jqt(jnp.diag(n_array))
+            n_minus_ng_array = n_array - 2 * self.params["ng"] * jnp.ones(n_max)
             ops["H_charge"] = jqt.jnp2jqt(jnp.diag(self.params["Ec"] * n_minus_ng_array**2))
 
         return ops
@@ -141,12 +177,15 @@ class Transmon(FluxDevice):
 
         if self.basis == BasisTypes.fock:
             return super().calculate_wavefunctions(phi_vals)
-        elif self.basis == BasisTypes.single_charge:
+        elif self.basis == BasisTypes.singlecharge:
             raise NotImplementedError("Wavefunctions for single charge basis not yet implemented.")
-        elif self.basis == BasisTypes.charge:
+        elif self.basis in [BasisTypes.charge, BasisTypes.singlecharge_even, BasisTypes.singlecharge_odd]:
             phi_vals = jnp.array(phi_vals)
 
-            n_labels = jnp.diag(self.original_ops["n"].data)
+            if self.basis in [BasisTypes.singlecharge_even, BasisTypes.singlecharge_odd]:
+                n_labels = 1/2 * jnp.diag(self.original_ops["n"].data)
+            else:
+                n_labels = jnp.diag(self.original_ops["n"].data)
 
             wavefunctions = []
             for nj in range(self.N_pre_diag):
