@@ -1,5 +1,9 @@
 # qcsys
 
+This has been deprecated in favor of [`jaxquantum.devices`](https://github.com/EQuS/jaxquantum) on Jul 13, 2025.
+
+---
+
 [![License](https://img.shields.io/github/license/EQuS/qcsys.svg?style=popout-square)](https://opensource.org/license/apache-2-0) [![](https://img.shields.io/github/release/EQuS/qcsys.svg?style=popout-square)](https://github.com/EQuS/qcsys/releases) [![](https://img.shields.io/pypi/dm/qcsys.svg?style=popout-square)](https://pypi.org/project/qcsys/)
 
 [S. R. Jha](https://github.com/Phionx), [S. Chowdhury](https://github.com/shoumikdc), [M. Hays](https://scholar.google.com/citations?user=06z0MjwAAAAJ), [J. A. Grover](https://scholar.google.com/citations?user=igewch8AAAAJ), [W. D. Oliver](https://scholar.google.com/citations?user=4vNbnqcAAAAJ&hl=en)
