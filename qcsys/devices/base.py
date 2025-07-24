@@ -19,7 +19,9 @@ config.update("jax_enable_x64", True)
 class BasisTypes(str, Enum):
     fock = "fock"
     charge = "charge"
-    single_charge = "single_charge"
+    singlecharge = "single_charge"
+    singlecharge_even = "singlecharge_even"
+    singlecharge_odd = "singlecharge_odd"
 
     @classmethod
     def from_str(cls, string: str):
@@ -341,4 +343,37 @@ class FluxDevice(Device):
         fig.tight_layout()
 
         return ax
+    
 
+@struct.dataclass
+class DiagDevice(ABC):
+    N: int = struct.field(pytree_node=False)
+    N_pre_diag: int = struct.field(pytree_node=False)
+    params: Dict[str, Any]
+    init_ops: Dict[str, Any] = struct.field(pytree_node=False)
+    init_evals: Array = struct.field(pytree_node=False)
+
+    @classmethod
+    def create(cls, N, N_pre_diag, params, ops, evals):
+        """Create a device.
+
+        Args:
+            N (int): dimension of Hilbert space.
+            params (dict): parameters of the device.
+        """
+        assert N_pre_diag >= N, "N_pre_diag must be greater than or equal to N."
+
+        return cls(N, N_pre_diag, params, ops, evals)
+
+    def process_ops_diag(self, ops):
+        ops_trunc = {}
+        for name, op in ops.items():
+            ops_trunc[name] = jqt.jnp2jqt(op.data[:self.N, :self.N])
+        return ops_trunc
+    
+    @property
+    def ops(self):
+        return self.process_ops_diag(self.init_ops)
+    
+    def get_H(self):
+        return jqt.jnp2jqt(jnp.diag(self.init_evals[:self.N]))
